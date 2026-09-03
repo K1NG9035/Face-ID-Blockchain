@@ -60,7 +60,11 @@ def verify_command(args: argparse.Namespace) -> int:
 def main() -> int:
     load_dotenv_if_available()
     args = build_parser().parse_args()
-    return run_command(args) if args.command == "run" else verify_command(args)
+    try:
+        return run_command(args) if args.command == "run" else verify_command(args)
+    except (FileNotFoundError, LookupError, RuntimeError, ValueError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
 
 
 if __name__ == "__main__":
