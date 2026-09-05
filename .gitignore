@@ -1,8 +1,16 @@
 .env
 .venv/
+build/
 __pycache__/
 .pytest_cache/
-artifacts/
+output/*
+!output/.gitkeep
+input/*
+!input/.gitkeep
 contract_abi.json
 contract_address.json
 *.jsonl
+.vs/
+models/
+data/
+mock_candidates/

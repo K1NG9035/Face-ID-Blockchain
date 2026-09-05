@@ -21,20 +21,55 @@ Copy-Item .env.example .env
 
 Fill `.env` with Google credentials, a dedicated Sepolia test wallet, an RPC URL, and the deployed contract address. Deploy with `python -m app.deploy_contract`, then copy the generated ABI/address into the project configuration as appropriate.
 
-## Run
+## Run & Train
+
+### 1. Train the Face Model
+You can train a face recognition classifier from a directory of labeled photos:
 
 ```powershell
-python -m app.cli run --image examples/input.jpg --threshold 0.50
-python -m app.cli verify --record-id 1 --artifact artifacts/candidate_1.jpg --metadata artifacts/last_metadata.json
+python -m app.cli train --dataset data\authorized_faces --model-output models\face_model.pkl
 ```
 
-The first command requires live Google Vision and Sepolia access. It writes `artifacts/last_metadata.json` and `artifacts/last_run.json`; generated artifacts and credentials are ignored by Git.
+### 2. Run Face Discovery & Verification Pipeline
+
+```powershell
+Copy-Item C:\Photos\authorized-face.jpg input\reference.jpg
+python -m app.cli run
+python -m app.cli verify --record-id 1 --artifact output\candidate_1.jpg --metadata output\last_metadata.json
+```
+
+For offline development and testing without live Google Vision or Sepolia funds:
+
+```powershell
+python -m app.cli run --mock-dir path\to\test_candidates --skip-blockchain
+```
+
+Place an authorized JPG, JPEG, PNG, or WEBP image in `input/`. The face model reads that image, tests candidate faces (including multi-face/crowd photos), and outputs:
+
+- `output/candidate_1.jpg`: raw matching candidate image
+- `output/candidate_1_annotated.jpg`: visual verification artifact with high-contrast bounding box, distance, and confidence
+- `output/last_metadata.json`: source URL, face distance, confidence score, detector model, and bounding box coordinates
+- `output/last_run.json`: blockchain record ID, transaction hash, and source URL
 
 ## Test
 
 ```powershell
 python -m pytest -q
 ```
+
+### CMake build targets
+
+CMake can create an isolated build environment and expose the setup, test, contract deployment, and pipeline commands:
+
+```powershell
+cmake -S . -B build
+cmake --build build --target setup
+cmake --build build --target test
+cmake --build build --target deploy-contract
+cmake --build build --target run
+```
+
+The CMake `run` target reads the image from `input/` and writes details to `output/` by default. Use `-DFACE_IMAGE=C:/Photos/face.jpg` to override the input image. The `deploy-contract` and `run` targets require the same `.env` credentials described above. The `test` target is offline.
 
 Tests for the pure hashing, URL, threshold, and Web3 codec logic run without external credentials or network access.
 
