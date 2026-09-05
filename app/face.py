@@ -13,14 +13,31 @@ class FaceMatch:
     distance: float
     threshold: float
     confidence: float = 0.0
+    cosine_similarity: float = 0.0
 
     def __post_init__(self) -> None:
         if self.confidence == 0.0 and self.threshold > 0:
             object.__setattr__(self, "confidence", calculate_confidence(self.distance, self.threshold))
+        if self.cosine_similarity == 0.0:
+            # For unit-normalized dlib vectors: ||u - v||^2 = 2 - 2*(u . v) => cos_sim = 1 - (dist^2)/2
+            approx_cos = max(-1.0, min(1.0, 1.0 - (self.distance ** 2) / 2.0))
+            object.__setattr__(self, "cosine_similarity", round(float(approx_cos), 4))
 
     @property
     def matched(self) -> bool:
         return self.distance <= self.threshold
+
+
+def compute_cosine_similarity(vec_a: Any, vec_b: Any) -> float:
+    """Compute cosine similarity between two 128-d vectors."""
+    import numpy as np
+    a = np.asarray(vec_a, dtype=np.float64)
+    b = np.asarray(vec_b, dtype=np.float64)
+    norm_a = np.linalg.norm(a)
+    norm_b = np.linalg.norm(b)
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return float(np.dot(a, b) / (norm_a * norm_b))
 
 
 def calculate_confidence(distance: float, threshold: float = 0.5) -> float:
@@ -72,6 +89,7 @@ def encode_all_faces(
     path: Path,
     upsample_times: int = 0,
     model: str = "hog",
+    adaptive_upsample: bool = True,
 ) -> list[tuple[Any, tuple[int, int, int, int]]]:
     if upsample_times < 0:
         raise ValueError("upsample_times must be non-negative")
@@ -80,6 +98,11 @@ def encode_all_faces(
     face_recognition = _library()
     image = face_recognition.load_image_file(path)
     locations = face_recognition.face_locations(image, number_of_times_to_upsample=upsample_times, model=model)
+
+    # Adaptive fallback: if no face found and upsample was 0, retry once with upsample=1 for low-res web images
+    if not locations and adaptive_upsample and upsample_times == 0:
+        locations = face_recognition.face_locations(image, number_of_times_to_upsample=1, model=model)
+
     if not locations:
         return []
     encodings = face_recognition.face_encodings(image, known_face_locations=locations)
@@ -92,7 +115,8 @@ def compare_encoding(reference: Any, candidate: Any, threshold: float) -> FaceMa
     if len(distances) != 1:
         raise ValueError("Face comparison returned an unexpected result")
     dist = float(distances[0])
-    return FaceMatch(dist, threshold, calculate_confidence(dist, threshold))
+    cos_sim = compute_cosine_similarity(reference, candidate)
+    return FaceMatch(dist, threshold, calculate_confidence(dist, threshold), cosine_similarity=round(cos_sim, 4))
 
 
 def find_best_matching_face(
@@ -112,11 +136,17 @@ def find_best_matching_face(
     candidate_encodings = [enc for enc, _ in faces]
     distances = face_recognition.face_distance(candidate_encodings, reference)
 
-    for dist, (_, location) in zip(distances, faces):
+    for dist, (candidate_enc, location) in zip(distances, faces):
         dist_float = float(dist)
         if dist_float <= threshold:
             if best_match is None or dist_float < best_match.distance:
-                best_match = FaceMatch(dist_float, threshold, calculate_confidence(dist_float, threshold))
+                cos_sim = compute_cosine_similarity(reference, candidate_enc)
+                best_match = FaceMatch(
+                    dist_float,
+                    threshold,
+                    calculate_confidence(dist_float, threshold),
+                    cosine_similarity=round(cos_sim, 4),
+                )
                 best_location = location
 
     if best_match is not None and best_location is not None:

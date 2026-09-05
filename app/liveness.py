@@ -22,8 +22,12 @@ class LivenessResult:
 def evaluate_liveness(
     image_source: Path | str | bytes | Image.Image,
     sharpness_threshold: float = 20.0,
+    face_location: tuple[int, int, int, int] | None = None,
 ) -> LivenessResult:
-    """Passive liveness and anti-spoofing analysis."""
+    """Passive liveness and anti-spoofing analysis.
+    If face_location (top, right, bottom, left) is supplied, evaluates the cropped
+    facial region (with margin) rather than background elements.
+    """
     if isinstance(image_source, (Path, str)):
         image = Image.open(image_source)
     elif isinstance(image_source, bytes):
@@ -33,6 +37,24 @@ def evaluate_liveness(
         image = image_source
 
     image = image.convert("RGB")
+
+    # If face location is supplied, crop to facial bounding box + 15% margin
+    if face_location is not None:
+        top, right, bottom, left = face_location
+        img_w, img_h = image.size
+        box_w = max(1, right - left)
+        box_h = max(1, bottom - top)
+        margin_x = int(box_w * 0.15)
+        margin_y = int(box_h * 0.15)
+        crop_box = (
+            max(0, left - margin_x),
+            max(0, top - margin_y),
+            min(img_w, right + margin_x),
+            min(img_h, bottom + margin_y),
+        )
+        if crop_box[2] > crop_box[0] and crop_box[3] > crop_box[1]:
+            image = image.crop(crop_box)
+
     rgb = np.asarray(image, dtype=np.float64)
     gray = np.asarray(image.convert("L"), dtype=np.float64)
 

@@ -168,6 +168,7 @@ def run_pipeline_service(
                 "distance": round(verified.match.distance, 4),
                 "threshold": threshold,
                 "confidence": round(verified.match.confidence, 2),
+                "cosine_similarity": round(getattr(verified.match, "cosine_similarity", 0.0), 4),
                 "matched": verified.match.matched,
                 "detector_model": detector_model,
                 "face_location": verified.face_location,

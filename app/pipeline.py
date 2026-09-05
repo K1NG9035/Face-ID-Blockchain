@@ -78,6 +78,7 @@ def find_match(
             "face_distance": round(match.distance, 4),
             "threshold": threshold,
             "confidence": round(match.confidence, 2),
+            "cosine_similarity": round(getattr(match, "cosine_similarity", 0.0), 4),
             "detector_model": detector_model,
             "face_location": {
                 "top": location[0],

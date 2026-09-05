@@ -327,9 +327,9 @@
             <span class="text-[9px] text-slate-500" id="metricLivenessStatus">PASS</span>
           </div>
           <div class="p-3 rounded-lg border border-forensic-border bg-forensic-card flex flex-col gap-1">
-            <span class="text-[10px] text-slate-500">PITCH / YAW / ROLL</span>
-            <span id="metricOrientation" class="text-xl font-bold text-slate-300">0.0°</span>
-            <span class="text-[9px] text-slate-500">NORMALIZED POSE</span>
+            <span class="text-[10px] text-slate-500">COSINE SIMILARITY</span>
+            <span id="metricCosine" class="text-xl font-bold text-ice-300">--</span>
+            <span class="text-[9px] text-slate-500">HYPERSPHERE ANGLE</span>
           </div>
         </div>
 
@@ -856,6 +856,9 @@
       document.getElementById('metricLiveness').innerText = `${liv.score}%`;
       document.getElementById('metricLivenessStatus').innerText = liv.is_live ? 'PASS (NATURAL)' : 'FLAGGED';
       document.getElementById('metricLivenessStatus').className = liv.is_live ? 'text-[9px] text-emerald-400 font-bold' : 'text-[9px] text-red-400 font-bold';
+
+      const cosVal = metrics.cosine_similarity !== undefined ? metrics.cosine_similarity : (1.0 - (metrics.distance ** 2) / 2.0);
+      document.getElementById('metricCosine').innerText = Number(cosVal).toFixed(3);
 
       if (metrics.face_location) {
         const loc = metrics.face_location;

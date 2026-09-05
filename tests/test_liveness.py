@@ -41,3 +41,23 @@ def test_evaluate_liveness_bytes_input():
     img.save(buf, format="JPEG")
     result = evaluate_liveness(buf.getvalue())
     assert isinstance(result, LivenessResult)
+
+
+def test_evaluate_liveness_with_face_location(tmp_path: Path):
+    # Image with natural background and flat inner region
+    img = Image.new("RGB", (300, 300))
+    pixels = np.random.randint(50, 200, (300, 300, 3), dtype=np.uint8)
+    # Paint center box flat gray (simulating spoofed screen in center)
+    pixels[100:200, 100:200] = [128, 128, 128]
+    img = Image.fromarray(pixels)
+    img_path = tmp_path / "spoof_crop.jpg"
+    img.save(img_path)
+
+    # When evaluating whole frame: outer random pixels raise sharpness
+    res_whole = evaluate_liveness(img_path)
+
+    # When evaluating specifically on the face location (100, 200, 200, 100)
+    res_cropped = evaluate_liveness(img_path, face_location=(100, 200, 200, 100))
+    # Cropped region is predominantly flat, so its sharpness/score must be lower than whole frame
+    assert res_cropped.details["sharpness_variance"] < res_whole.details["sharpness_variance"]
+

@@ -47,3 +47,23 @@ def test_invalid_parameters_raise():
     with pytest.raises(ValueError, match="model must be"):
         encode_all_faces(Path("nonexistent.jpg"), model="invalid")
 
+
+def test_cosine_similarity_calculation():
+    from app.face import compute_cosine_similarity
+    import numpy as np
+
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([1.0, 0.0, 0.0])
+    assert compute_cosine_similarity(v1, v2) == pytest.approx(1.0)
+
+    v3 = np.array([0.0, 1.0, 0.0])
+    assert compute_cosine_similarity(v1, v3) == pytest.approx(0.0)
+
+    # FaceMatch approximate cosine similarity property
+    match = FaceMatch(distance=0.0, threshold=0.5)
+    assert match.cosine_similarity == pytest.approx(1.0)
+
+    # At distance 0.5: cos_sim ~ 1 - (0.25)/2 = 0.875
+    match_mid = FaceMatch(distance=0.5, threshold=0.5)
+    assert match_mid.cosine_similarity == pytest.approx(0.875, abs=1e-3)
+

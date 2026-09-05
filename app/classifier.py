@@ -18,6 +18,7 @@ class ClassificationResult:
     distance: float
     matched: bool
     face_location: tuple[int, int, int, int]
+    cosine_similarity: float = 0.0
 
 
 class FaceClassifier:
@@ -120,6 +121,11 @@ class FaceClassifier:
             confidence = calculate_confidence(best_dist, thresh)
             pred_label = best_label if matched else "Unknown"
 
+            ref_vec = self.embeddings[min_idx]
+            norm_ref = np.linalg.norm(ref_vec)
+            norm_enc = np.linalg.norm(enc_arr)
+            cos_sim = float(np.dot(ref_vec, enc_arr) / (norm_ref * norm_enc)) if (norm_ref > 0 and norm_enc > 0) else 0.0
+
             results.append(
                 ClassificationResult(
                     label=pred_label,
@@ -127,6 +133,7 @@ class FaceClassifier:
                     distance=best_dist,
                     matched=matched,
                     face_location=location,
+                    cosine_similarity=round(cos_sim, 4),
                 )
             )
         return results
