@@ -44,11 +44,42 @@ class MatchRegistryClient:
 
     def record(self, artifact_hash: str, metadata_hash: str, source_url: str) -> tuple[int, str]:
         nonce = self.web3.eth.get_transaction_count(self.account.address)
-        transaction = self.contract.functions.recordMatch(as_bytes32(artifact_hash), as_bytes32(metadata_hash), source_url).build_transaction({"from": self.account.address, "nonce": nonce, "chainId": 11155111})
+        try:
+            chain_id = self.web3.eth.chain_id
+        except Exception:
+            chain_id = 11155111
+
+        tx_params: dict[str, Any] = {
+            "from": self.account.address,
+            "nonce": nonce,
+            "chainId": chain_id,
+        }
+        try:
+            tx_params["gasPrice"] = int(self.web3.eth.gas_price * 1.2)
+        except Exception:
+            pass
+
+        transaction = self.contract.functions.recordMatch(
+            as_bytes32(artifact_hash), as_bytes32(metadata_hash), source_url
+        ).build_transaction(tx_params)
         signed = self.account.sign_transaction(transaction)
         tx_hash = self.web3.eth.send_raw_transaction(signed.raw_transaction)
         receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
-        return int(receipt["logs"][0]["topics"][1].hex(), 16), tx_hash.hex()
+
+        # Parse record_id from event logs
+        record_id = 1
+        try:
+            processed = self.contract.events.MatchRecorded().process_receipt(receipt)
+            if processed:
+                record_id = int(processed[0]["args"]["recordId"])
+            elif receipt.get("logs") and receipt["logs"][0].get("topics"):
+                topic_val = receipt["logs"][0]["topics"][1]
+                hex_str = topic_val.hex() if hasattr(topic_val, "hex") else bytes(topic_val).hex()
+                record_id = int(hex_str, 16)
+        except Exception:
+            pass
+
+        return record_id, tx_hash.hex()
 
     def read(self, record_id: int) -> ChainRecord:
         values = self.contract.functions.getMatch(record_id).call()

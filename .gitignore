@@ -14,3 +14,4 @@ contract_address.json
 models/
 data/
 mock_candidates/
+*.db

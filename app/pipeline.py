@@ -24,6 +24,7 @@ class VerifiedCandidate:
     metadata_hash: str
     annotated_path: Path | None = None
     face_location: tuple[int, int, int, int] | None = None
+    reference_encoding: list[float] | None = None
 
 
 def find_match(
@@ -94,5 +95,6 @@ def find_match(
             metadata_hash=metadata_hash(metadata),
             annotated_path=annotated_path,
             face_location=location,
+            reference_encoding=[round(float(x), 5) for x in reference] if hasattr(reference, "__iter__") else None,
         )
     raise LookupError("No web candidate passed local face verification")

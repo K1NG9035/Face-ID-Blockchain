@@ -1,186 +1,190 @@
 from __future__ import annotations
 
-import argparse
-import cgi
-from http import HTTPStatus
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-import json
-import mimetypes
+import base64
 from pathlib import Path
-import sys
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
-from .database import MatchDatabase
-from .fingerprint import metadata_hash, sha256_file
-from .service import run_pipeline_service
+from .classifier import train_face_classifier
+from .config import Settings, load_dotenv_if_available
+from .database import get_record, list_records, verify_offline_record
+from .service import PipelineDossier, run_pipeline_service
 
-STATIC_DIR = Path("static")
 OUTPUT_DIR = Path("output")
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+STATIC_DIR = Path("app/static")
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+
+app = FastAPI(
+    title="FaceWebChain API",
+    description="Privacy-preserving face discovery, social verification, and blockchain integrity proof.",
+    version="2.0.0",
+)
+
+# Enable CORS for frontend integration (Vite, React, Vue, Vanilla HTML)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount artifacts and static folders
+app.mount("/artifacts", StaticFiles(directory=str(OUTPUT_DIR)), name="artifacts")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
-class PipelineApiHandler(SimpleHTTPRequestHandler):
-    """Zero-dependency HTTP request handler for the FaceWebChain Web App & API."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, directory=str(STATIC_DIR), **kwargs)
-
-    def _send_json(self, data: Any, status: int = HTTPStatus.OK) -> None:
-        payload = json.dumps(data, indent=2).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(payload)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.end_headers()
-        self.wfile.write(payload)
-
-    def do_OPTIONS(self) -> None:
-        self.send_response(HTTPStatus.NO_CONTENT)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.end_headers()
-
-    def do_GET(self) -> None:
-        parsed = urlparse(self.path)
-        path = parsed.path
-
-        if path == "/api/health":
-            db = MatchDatabase()
-            self._send_json({
-                "status": "healthy",
-                "service": "FaceWebChain Pipeline Engine",
-                "total_records": db.count(),
-                "static_ready": STATIC_DIR.is_dir(),
-            })
-            return
-
-        if path == "/api/records":
-            db = MatchDatabase()
-            query = parse_qs(parsed.query)
-            limit = int(query.get("limit", [50])[0])
-            records = [r.to_dict() for r in db.list_records(limit=limit)]
-            self._send_json({"records": records, "count": len(records)})
-            return
-
-        if path.startswith("/api/records/"):
-            artifact_hash = path.removeprefix("/api/records/").strip()
-            db = MatchDatabase()
-            record = db.get_by_artifact_hash(artifact_hash)
-            if record:
-                self._send_json({"found": True, "record": record.to_dict()})
-            else:
-                self._send_json({"found": False, "error": "Record not found"}, status=HTTPStatus.NOT_FOUND)
-            return
-
-        # Serve generated output artifacts like candidate_1_annotated.jpg
-        if path.startswith("/artifacts/"):
-            artifact_filename = path.removeprefix("/artifacts/").strip()
-            file_path = OUTPUT_DIR / artifact_filename
-            if file_path.is_file():
-                content_type, _ = mimetypes.guess_type(str(file_path))
-                data = file_path.read_bytes()
-                self.send_response(HTTPStatus.OK)
-                self.send_header("Content-Type", content_type or "application/octet-stream")
-                self.send_header("Content-Length", str(len(data)))
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(data)
-                return
-            else:
-                self.send_error(HTTPStatus.NOT_FOUND, "Artifact not found")
-                return
-
-        # Fallback to static files
-        if not STATIC_DIR.is_dir():
-            STATIC_DIR.mkdir(parents=True, exist_ok=True)
-        super().do_GET()
-
-    def do_POST(self) -> None:
-        parsed = urlparse(self.path)
-        path = parsed.path
-
-        content_length = int(self.headers.get("Content-Length", 0))
-        post_body = self.rfile.read(content_length)
-
-        if path == "/api/scan":
-            try:
-                body = json.loads(post_body.decode("utf-8")) if post_body else {}
-                image_input = body.get("image")
-                if not image_input:
-                    self._send_json({"error": "Missing 'image' in request body"}, status=HTTPStatus.BAD_REQUEST)
-                    return
-
-                threshold = float(body.get("threshold", 0.5))
-                detector_model = body.get("model", "hog")
-                upsample_times = int(body.get("upsample_times", 0))
-                mock_dir = Path(body["mock_dir"]) if body.get("mock_dir") else None
-                skip_blockchain = bool(body.get("skip_blockchain", True))
-                require_liveness = bool(body.get("require_liveness", False))
-
-                dossier = run_pipeline_service(
-                    image_input=image_input,
-                    threshold=threshold,
-                    detector_model=detector_model,
-                    upsample_times=upsample_times,
-                    mock_dir=mock_dir,
-                    skip_blockchain=skip_blockchain,
-                    require_liveness=require_liveness,
-                )
-                self._send_json({"success": True, "dossier": dossier.to_dict()})
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-            return
-
-        if path == "/api/verify":
-            try:
-                body = json.loads(post_body.decode("utf-8")) if post_body else {}
-                artifact_hash = body.get("artifact_hash")
-                metadata_hash_val = body.get("metadata_hash")
-                if not artifact_hash or not metadata_hash_val:
-                    self._send_json({"error": "artifact_hash and metadata_hash required"}, status=HTTPStatus.BAD_REQUEST)
-                    return
-
-                db = MatchDatabase()
-                record = db.get_by_artifact_hash(artifact_hash)
-                if not record:
-                    self._send_json({"verified": False, "reason": "Hash not found in registry"})
-                    return
-
-                is_verified = (record.metadata_hash == metadata_hash_val)
-                self._send_json({
-                    "verified": is_verified,
-                    "status": "VERIFIED" if is_verified else "TAMPERED",
-                    "record": record.to_dict(),
-                })
-            except Exception as exc:
-                self._send_json({"success": False, "error": str(exc)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-            return
-
-        self.send_error(HTTPStatus.NOT_FOUND, "API endpoint not found")
+class ScanJsonRequest(BaseModel):
+    image: str = Field(..., description="Base64 encoded image or data URL")
+    threshold: float = Field(0.5, description="Face comparison distance threshold")
+    detector_model: str = Field("hog", description="Face detector: hog or cnn")
+    upsample_times: int = Field(0, description="Upsample count for small faces")
+    skip_blockchain: bool = Field(False, description="Bypass Sepolia on-chain registration")
+    require_liveness: bool = Field(False, description="Enforce strict anti-spoofing gating")
 
 
-def start_server(host: str = "127.0.0.1", port: int = 8000) -> None:
-    STATIC_DIR.mkdir(parents=True, exist_ok=True)
-    server_address = (host, port)
-    httpd = ThreadingHTTPServer(server_address, PipelineApiHandler)
-    print(f"FaceWebChain Web & API Server active at: http://{host}:{port}")
+class TrainRequest(BaseModel):
+    dataset_dir: str = Field("data/authorized_faces", description="Directory of labeled identity images")
+    model_output: str = Field("models/face_model.pkl", description="Path to save trained weights")
+    model: str = Field("hog", description="Detection model")
+    threshold: float = Field(0.5, description="Match threshold")
+
+
+@app.get("/")
+def root() -> Any:
+    index_path = STATIC_DIR / "index.html"
+    if index_path.is_file():
+        return FileResponse(str(index_path))
+    return {
+        "system": "FaceWebChain Core API",
+        "status": "ONLINE",
+        "docs": "/docs",
+    }
+
+
+@app.get("/api/sample")
+def get_sample_image() -> dict[str, Any]:
+    """Provide bundled reference image as base64 for instant demo."""
+    input_dir = Path("input")
+    supported = {".jpg", ".jpeg", ".png", ".webp"}
+    images = [p for p in input_dir.iterdir() if p.is_file() and p.suffix.lower() in supported]
+    if not images:
+        raise HTTPException(status_code=404, detail="No sample image in input/ directory")
+    sample_path = images[0]
+    raw_b64 = base64.b64encode(sample_path.read_bytes()).decode("utf-8")
+    mime = "image/jpeg" if sample_path.suffix.lower() in {".jpg", ".jpeg"} else "image/png"
+    return {
+        "filename": sample_path.name,
+        "image": f"data:{mime};base64,{raw_b64}",
+        "size_bytes": sample_path.stat().st_size,
+    }
+
+
+@app.get("/api/health")
+def health() -> dict[str, Any]:
+    load_dotenv_if_available()
+    settings = Settings.from_environment()
+    has_google = bool(settings.google_credentials)
+    has_sepolia = bool(settings.sepolia_rpc_url and settings.private_key and settings.contract_address)
+    records = list_records(limit=1)
+
+    return {
+        "status": "healthy",
+        "google_vision_configured": has_google,
+        "sepolia_configured": has_sepolia,
+        "total_records": len(list_records(limit=1000)),
+        "explorer_base_url": settings.explorer_base_url,
+    }
+
+
+@app.post("/api/scan")
+def scan_face(payload: ScanJsonRequest) -> dict[str, Any]:
+    """Process a face scan via Base64 payload, discover social matches, and verify on-chain."""
     try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down server.")
-        httpd.server_close()
+        dossier: PipelineDossier = run_pipeline_service(
+            image_input=payload.image,
+            output_dir=OUTPUT_DIR,
+            threshold=payload.threshold,
+            detector_model=payload.detector_model,
+            upsample_times=payload.upsample_times,
+            skip_blockchain=payload.skip_blockchain,
+            require_liveness=payload.require_liveness,
+        )
+        return dossier.to_dict()
+    except (FileNotFoundError, LookupError, ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Start FaceWebChain web & API server")
-    parser.add_argument("--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
-    args = parser.parse_args()
-    start_server(host=args.host, port=args.port)
+@app.post("/api/scan/upload")
+async def scan_face_upload(
+    file: UploadFile = File(...),
+    threshold: float = Form(0.5),
+    detector_model: str = Form("hog"),
+    upsample_times: int = Form(0),
+    skip_blockchain: bool = Form(False),
+    require_liveness: bool = Form(False),
+) -> dict[str, Any]:
+    """Process a face scan via direct multipart file upload."""
+    content = await file.read()
+    try:
+        dossier: PipelineDossier = run_pipeline_service(
+            image_input=content,
+            output_dir=OUTPUT_DIR,
+            threshold=threshold,
+            detector_model=detector_model,
+            upsample_times=upsample_times,
+            skip_blockchain=skip_blockchain,
+            require_liveness=require_liveness,
+        )
+        return dossier.to_dict()
+    except (FileNotFoundError, LookupError, ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
-if __name__ == "__main__":
-    main()
+@app.get("/api/records")
+def get_records(limit: int = 50) -> list[dict[str, Any]]:
+    """Fetch historical evidence records from the offline database."""
+    return list_records(limit=limit)
+
+
+@app.get("/api/records/{record_id}")
+def get_single_record(record_id: int) -> dict[str, Any]:
+    """Retrieve details for a specific record."""
+    record = get_record(record_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    return record
+
+
+@app.get("/api/verify/{record_id}")
+def verify_record(record_id: int) -> dict[str, Any]:
+    """Re-verify an evidence record against on-disk hashes."""
+    try:
+        return verify_offline_record(record_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.post("/api/train")
+def train_model(payload: TrainRequest) -> dict[str, Any]:
+    """Train a custom face recognition model from a directory."""
+    try:
+        classifier = train_face_classifier(
+            dataset_dir=Path(payload.dataset_dir),
+            output_model_path=Path(payload.model_output),
+            model=payload.model,
+            threshold=payload.threshold,
+        )
+        return {
+            "status": "TRAINED",
+            "model_path": payload.model_output,
+            "classes": classifier.classes,
+            "sample_count": len(classifier.labels),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))

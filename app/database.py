@@ -1,165 +1,156 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sqlite3
 from typing import Any
 
+from .fingerprint import metadata_hash, sha256_file
+from .service import PipelineDossier
 
-@dataclass(frozen=True)
-class StoredRecord:
-    record_id: int
-    artifact_hash: str
-    metadata_hash: str
-    platform: str
-    author: str | None
-    source_url: str
-    post_url: str | None
-    confidence: float
-    liveness_score: float
-    tx_hash: str | None
-    created_at: str
-    raw_metadata: str
-
-    def to_dict(self) -> dict[str, Any]:
-        data = asdict(self)
-        try:
-            data["raw_metadata"] = json.loads(self.raw_metadata)
-        except Exception:
-            pass
-        return data
+DEFAULT_DB_PATH = Path("output/evidence_vault.db")
 
 
-class MatchDatabase:
-    """High-performance local SQLite database for offline caching, indexing, and fast lookups."""
+def get_connection(db_path: Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    return conn
 
-    def __init__(self, db_path: Path = Path("records.db")) -> None:
-        self.db_path = db_path
-        self._init_db()
 
-    def _get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path))
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    def _init_db(self) -> None:
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        with self._get_connection() as conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS match_records (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    on_chain_record_id INTEGER,
-                    artifact_hash TEXT NOT NULL UNIQUE,
-                    metadata_hash TEXT NOT NULL,
-                    platform TEXT NOT NULL,
-                    author TEXT,
-                    source_url TEXT NOT NULL,
-                    post_url TEXT,
-                    confidence REAL NOT NULL,
-                    liveness_score REAL NOT NULL,
-                    tx_hash TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    raw_metadata TEXT NOT NULL
-                )
-                """
+def init_db(db_path: Path = DEFAULT_DB_PATH) -> None:
+    """Initialize the local evidence database schema."""
+    with get_connection(db_path) as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS evidence_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                status TEXT NOT NULL,
+                artifact_hash TEXT NOT NULL,
+                metadata_hash TEXT NOT NULL,
+                liveness_score REAL,
+                is_live INTEGER,
+                confidence REAL,
+                distance REAL,
+                threshold REAL,
+                detector_model TEXT,
+                social_platform TEXT,
+                social_author TEXT,
+                social_post_url TEXT,
+                social_image_url TEXT,
+                social_caption TEXT,
+                artifact_path TEXT,
+                annotated_path TEXT,
+                blockchain_network TEXT,
+                blockchain_tx_hash TEXT,
+                blockchain_record_id INTEGER
             )
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_artifact_hash ON match_records(artifact_hash)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_platform ON match_records(platform)")
-            conn.commit()
+            """
+        )
+        conn.commit()
 
-    def store_record(
-        self,
-        artifact_hash: str,
-        metadata_hash: str,
-        platform: str,
-        source_url: str,
-        confidence: float,
-        liveness_score: float,
-        raw_metadata: dict[str, Any],
-        author: str | None = None,
-        post_url: str | None = None,
-        on_chain_record_id: int | None = None,
-        tx_hash: str | None = None,
-    ) -> int:
-        with self._get_connection() as conn:
-            cursor = conn.execute(
-                """
-                INSERT INTO match_records (
-                    on_chain_record_id, artifact_hash, metadata_hash,
-                    platform, author, source_url, post_url,
-                    confidence, liveness_score, tx_hash, raw_metadata
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(artifact_hash) DO UPDATE SET
-                    metadata_hash = excluded.metadata_hash,
-                    on_chain_record_id = COALESCE(excluded.on_chain_record_id, match_records.on_chain_record_id),
-                    tx_hash = COALESCE(excluded.tx_hash, match_records.tx_hash),
-                    raw_metadata = excluded.raw_metadata
-                """,
-                (
-                    on_chain_record_id,
-                    artifact_hash,
-                    metadata_hash,
-                    platform,
-                    author,
-                    source_url,
-                    post_url,
-                    confidence,
-                    liveness_score,
-                    tx_hash,
-                    json.dumps(raw_metadata),
-                ),
-            )
-            conn.commit()
-            return cursor.lastrowid or 0
 
-    def get_by_artifact_hash(self, artifact_hash: str) -> StoredRecord | None:
-        with self._get_connection() as conn:
-            row = conn.execute(
-                "SELECT * FROM match_records WHERE artifact_hash = ?", (artifact_hash,)
-            ).fetchone()
-            if not row:
-                return None
-            return StoredRecord(
-                record_id=row["id"],
-                artifact_hash=row["artifact_hash"],
-                metadata_hash=row["metadata_hash"],
-                platform=row["platform"],
-                author=row["author"],
-                source_url=row["source_url"],
-                post_url=row["post_url"],
-                confidence=row["confidence"],
-                liveness_score=row["liveness_score"],
-                tx_hash=row["tx_hash"],
-                created_at=row["created_at"],
-                raw_metadata=row["raw_metadata"],
-            )
+def insert_record(
+    dossier: PipelineDossier,
+    db_path: Path = DEFAULT_DB_PATH,
+) -> int:
+    """Persist a verified pipeline dossier into the local database."""
+    init_db(db_path)
+    now = datetime.now(timezone.utc).isoformat()
+    liv = dossier.liveness
+    post = dossier.social_post
+    metrics = dossier.match_metrics
+    hashes = dossier.evidence_hashes
+    proof = dossier.blockchain_proof
 
-    def list_records(self, limit: int = 50) -> list[StoredRecord]:
-        with self._get_connection() as conn:
-            rows = conn.execute(
-                "SELECT * FROM match_records ORDER BY id DESC LIMIT ?", (limit,)
-            ).fetchall()
-            return [
-                StoredRecord(
-                    record_id=r["id"],
-                    artifact_hash=r["artifact_hash"],
-                    metadata_hash=r["metadata_hash"],
-                    platform=r["platform"],
-                    author=r["author"],
-                    source_url=r["source_url"],
-                    post_url=r["post_url"],
-                    confidence=r["confidence"],
-                    liveness_score=r["liveness_score"],
-                    tx_hash=r["tx_hash"],
-                    created_at=r["created_at"],
-                    raw_metadata=r["raw_metadata"],
-                )
-                for r in rows
-            ]
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            """
+            INSERT INTO evidence_records (
+                created_at, status, artifact_hash, metadata_hash,
+                liveness_score, is_live, confidence, distance, threshold,
+                detector_model, social_platform, social_author, social_post_url,
+                social_image_url, social_caption, artifact_path, annotated_path,
+                blockchain_network, blockchain_tx_hash, blockchain_record_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                now,
+                dossier.status,
+                hashes.get("artifact_sha256", ""),
+                hashes.get("metadata_sha256", ""),
+                liv.get("score", 0.0),
+                1 if liv.get("is_live", False) else 0,
+                metrics.get("confidence", 0.0),
+                metrics.get("distance", 0.0),
+                metrics.get("threshold", 0.5),
+                metrics.get("detector_model", "hog"),
+                post.get("platform", "Web"),
+                post.get("author"),
+                post.get("post_url"),
+                post.get("image_url"),
+                post.get("caption"),
+                metrics.get("artifact_path"),
+                metrics.get("annotated_artifact"),
+                proof.get("network"),
+                proof.get("transaction_hash"),
+                proof.get("record_id"),
+            ),
+        )
+        conn.commit()
+        return int(cursor.lastrowid)
 
-    def count(self) -> int:
-        with self._get_connection() as conn:
-            res = conn.execute("SELECT COUNT(*) FROM match_records").fetchone()
-            return res[0] if res else 0
+
+def get_record(record_id: int, db_path: Path = DEFAULT_DB_PATH) -> dict[str, Any] | None:
+    """Fetch a single record by primary key."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT * FROM evidence_records WHERE id = ?", (record_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def list_records(limit: int = 50, db_path: Path = DEFAULT_DB_PATH) -> list[dict[str, Any]]:
+    """Retrieve the most recent evidence records."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            "SELECT * FROM evidence_records ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def verify_offline_record(record_id: int, db_path: Path = DEFAULT_DB_PATH) -> dict[str, Any]:
+    """Perform independent offline cryptographic verification of a stored record."""
+    record = get_record(record_id, db_path)
+    if not record:
+        raise KeyError(f"Record #{record_id} not found in database")
+
+    artifact_file = Path(record["artifact_path"] or "")
+    if not artifact_file.is_file():
+        # Fallback to standard output naming
+        fallback = db_path.parent / "candidate_1.jpg"
+        if fallback.is_file():
+            artifact_file = fallback
+        else:
+            return {
+                "record_id": record_id,
+                "verified": False,
+                "reason": f"Artifact file missing: {artifact_file}",
+            }
+
+    current_hash = sha256_file(artifact_file)
+    matches_stored = current_hash == record["artifact_hash"]
+
+    return {
+        "record_id": record_id,
+        "verified": matches_stored,
+        "status": "VERIFIED" if matches_stored else "TAMPERED",
+        "stored_hash": record["artifact_hash"],
+        "recomputed_hash": current_hash,
+        "social_platform": record["social_platform"],
+        "confidence": record["confidence"],
+    }

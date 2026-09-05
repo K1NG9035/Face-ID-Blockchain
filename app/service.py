@@ -160,27 +160,7 @@ def run_pipeline_service(
                 encoding="utf-8",
             )
 
-        # 7. Persist to Offline State Database (SQLite)
-        try:
-            from .database import MatchDatabase
-            db = MatchDatabase()
-            db.store_record(
-                artifact_hash=verified.artifact_hash,
-                metadata_hash=verified.metadata_hash,
-                platform=social_post.platform,
-                author=social_post.author,
-                source_url=verified.candidate.url,
-                post_url=social_post.post_url,
-                confidence=verified.match.confidence,
-                liveness_score=liveness.score,
-                on_chain_record_id=blockchain_proof.get("record_id"),
-                tx_hash=blockchain_proof.get("transaction_hash"),
-                raw_metadata=enriched_metadata,
-            )
-        except Exception:
-            pass
-
-        return PipelineDossier(
+        dossier = PipelineDossier(
             status="VERIFIED_MATCH",
             liveness=liveness.to_dict(),
             social_post=social_post.to_dict(),
@@ -191,7 +171,9 @@ def run_pipeline_service(
                 "matched": verified.match.matched,
                 "detector_model": detector_model,
                 "face_location": verified.face_location,
+                "artifact_path": str(verified.artifact_path),
                 "annotated_artifact": str(verified.annotated_path) if verified.annotated_path else None,
+                "embedding_tensor": verified.reference_encoding,
             },
             evidence_hashes={
                 "artifact_sha256": verified.artifact_hash,
@@ -199,3 +181,11 @@ def run_pipeline_service(
             },
             blockchain_proof=blockchain_proof,
         )
+
+        try:
+            from .database import insert_record
+            insert_record(dossier, db_path=output_dir / "evidence_vault.db")
+        except Exception:
+            pass
+
+        return dossier
