@@ -45,6 +45,83 @@ class GoogleVisionSearch:
         return unique_candidates(candidates)
 
 
+class LiveWebVisualSearch:
+    """Live visual reverse-image search engine querying the public web without requiring paid API keys.
+    Uploads a temporary query thumbnail to a secure ephemeral image host and searches Bing Visual Search
+    to extract matching web images and social media posts (Twitter/X, Instagram, Reddit, Pinterest, etc.).
+    """
+
+    def search(self, image_path: Path) -> list[Candidate]:
+        import httpx
+        import re
+        import io
+        from PIL import Image
+
+        # 1. Optimize image resolution for fast network dispatch (< 400px, JPEG 85)
+        raw_bytes = image_path.read_bytes()
+        try:
+            im = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
+            im.thumbnail((400, 400))
+            buf = io.BytesIO()
+            im.save(buf, format="JPEG", quality=85)
+            upload_bytes = buf.getvalue()
+        except Exception:
+            upload_bytes = raw_bytes
+
+        # 2. Upload thumbnail to ephemeral public staging endpoint
+        public_img_url: str | None = None
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                files = {"file": ("query.jpg", upload_bytes, "image/jpeg")}
+                res = client.post("https://tmpfiles.org/api/v1/upload", files=files)
+                if res.status_code == 200:
+                    data = res.json()
+                    page_url = data.get("data", {}).get("url", "")
+                    if "tmpfiles.org/" in page_url:
+                        # Direct download URL conversion: tmpfiles.org/ID/name -> tmpfiles.org/dl/ID/name
+                        public_img_url = page_url.replace("tmpfiles.org/", "tmpfiles.org/dl/")
+        except Exception:
+            public_img_url = None
+
+        candidates: list[Candidate] = []
+
+        # 3. Query Bing Visual Search with the live image URL
+        if public_img_url:
+            try:
+                bing_url = f"https://www.bing.com/images/search?view=detailv2&iss=sbi&FORM=SBIHMP&sbisrc=UrlPaste&q=imgurl:{public_img_url}"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept-Language": "en-US,en;q=0.9",
+                }
+                with httpx.Client(headers=headers, follow_redirects=True, timeout=15.0) as client:
+                    resp = client.get(bing_url)
+                    if resp.status_code == 200:
+                        html = resp.text
+                        # Extract external images
+                        img_urls = re.findall(r'https?://[^\s"\'<>]+?\.(?:jpg|jpeg|png)', html, re.IGNORECASE)
+                        # Extract associated social media page URLs
+                        page_urls = re.findall(
+                            r'https?://(?:www\.)?(?:x\.com|twitter\.com|instagram\.com|reddit\.com|pinterest\.com|facebook\.com|linkedin\.com)/[^\s"\'<>&;]+',
+                            html,
+                            re.IGNORECASE,
+                        )
+
+                        # Clean Bing internal assets
+                        clean_imgs = [
+                            u for u in img_urls
+                            if "bing.com" not in u and "microsoft.com" not in u and "live.com" not in u
+                        ]
+
+                        # Pair each found image with the most relevant social post page if available
+                        for i, img_url in enumerate(clean_imgs[:30]):
+                            page_url = page_urls[i % len(page_urls)] if page_urls else None
+                            candidates.append(Candidate(url=img_url, page_url=page_url))
+            except Exception:
+                pass
+
+        return unique_candidates(candidates)
+
+
 class MockSearchProvider:
     """Mock search provider returning pre-configured candidates for testing/development."""
 

@@ -81,7 +81,7 @@ def run_pipeline_service(
         if require_liveness and not liveness.is_live:
             raise ValueError(f"Face failed liveness verification: {', '.join(liveness.reasons)}")
 
-        # 2. Select Search Provider
+        # 2. Select Search Provider — priority: explicit > mock_dir > Google Vision > LiveWebVisualSearch (no-key)
         provider: SearchProvider
         if search_provider is not None:
             provider = search_provider
@@ -89,11 +89,12 @@ def run_pipeline_service(
             provider = LocalDirectorySearch(mock_dir)
         else:
             settings = Settings.from_environment()
-            default_mock = Path("mock_candidates")
-            if not settings.google_credentials and default_mock.is_dir():
-                provider = LocalDirectorySearch(default_mock)
-            else:
+            if settings.google_credentials:
                 provider = GoogleVisionSearch()
+            else:
+                # No paid API key — query the live internet using Bing Visual Search (zero-key OSINT engine)
+                from .web_search import LiveWebVisualSearch
+                provider = LiveWebVisualSearch()
 
         # 3. Discover, Download & Verify Candidate Face
         verified = find_match(
