@@ -43,6 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--mock-dir", type=Path, help="Run offline using a local directory of candidate images instead of Google Vision")
     run.add_argument("--no-annotate", action="store_true", help="Disable visual bounding box annotation artifact")
     run.add_argument("--skip-blockchain", action="store_true", help="Skip Sepolia on-chain registration (offline/local mode)")
+    run.add_argument("--require-liveness", action="store_true", help="Abort if face scan fails liveness/anti-spoofing check")
     run.add_argument("--output", type=Path, default=OUTPUT_DIR, help=f"Folder for candidate image and JSON details (default: {OUTPUT_DIR})")
 
     verify = commands.add_parser("verify", help="Verify local artifact against Ethereum Sepolia record")
@@ -69,53 +70,53 @@ def train_command(args: argparse.Namespace) -> int:
 
 
 def run_command(args: argparse.Namespace) -> int:
+    from .service import run_pipeline_service
     args.image = args.image or INPUT_DIR
     if args.image.is_dir():
         args.image = find_input_image(args.image)
     if not args.image.is_file():
         raise FileNotFoundError(args.image)
 
-    search_provider = LocalDirectorySearch(args.mock_dir) if args.mock_dir else GoogleVisionSearch()
-    annotate = not args.no_annotate
-
-    result = find_match(
-        args.image,
-        search_provider,
-        args.threshold,
-        args.output,
-        args.upsample_times,
+    dossier = run_pipeline_service(
+        image_input=args.image,
+        output_dir=args.output,
+        threshold=args.threshold,
         detector_model=args.model,
-        annotate=annotate,
+        upsample_times=args.upsample_times,
+        mock_dir=args.mock_dir,
+        skip_blockchain=args.skip_blockchain,
+        require_liveness=args.require_liveness,
     )
-    (args.output / "last_metadata.json").write_text(json.dumps(result.metadata, indent=2), encoding="utf-8")
 
-    print(f"[1/4] FACE ENCODING: complete (model: {args.model})")
-    print(f"[2/4] DISCOVERY SOURCE: {result.candidate.url}")
-    print(f"[3/4] FACE VERIFICATION: MATCH ({result.match.distance:.3f} <= {args.threshold:.3f}) | Confidence: {result.match.confidence:.1f}%")
-    if result.annotated_path:
-        print(f"      ANNOTATED ARTIFACT: {result.annotated_path}")
-    print(f"[4/4] ARTIFACT SHA-256: {result.artifact_hash}\n      METADATA SHA-256: {result.metadata_hash}")
+    liv = dossier.liveness
+    liv_status = "PASS" if liv["is_live"] else "WARNING/FAIL"
+    print(f"[1/5] LIVENESS CHECK: {liv_status} ({liv['score']}%) | {', '.join(liv['reasons'])}")
+    print(f"[2/5] FACE ENCODING: complete (model: {dossier.match_metrics['detector_model']})")
 
-    if args.skip_blockchain:
+    post = dossier.social_post
+    post_label = f"[{post['platform']}]"
+    if post.get("author"):
+        post_label += f" Author: {post['author']}"
+    print(f"[3/5] SOCIAL DISCOVERY: {post_label}")
+    print(f"      Image URL: {post['image_url']}")
+    if post.get("post_url"):
+        print(f"      Post URL:  {post['post_url']}")
+    if post.get("caption"):
+        print(f"      Caption:   {post['caption']}")
+
+    metrics = dossier.match_metrics
+    print(f"[4/5] FACE VERIFICATION: MATCH ({metrics['distance']:.3f} <= {metrics['threshold']:.3f}) | Confidence: {metrics['confidence']:.1f}%")
+    if metrics.get("annotated_artifact"):
+        print(f"      ANNOTATED ARTIFACT: {metrics['annotated_artifact']}")
+
+    hashes = dossier.evidence_hashes
+    print(f"[5/5] ARTIFACT SHA-256: {hashes['artifact_sha256']}\n      METADATA SHA-256: {hashes['metadata_sha256']}")
+
+    proof = dossier.blockchain_proof
+    if proof.get("status") == "anchored":
+        print(f"BLOCKCHAIN: Sepolia record {proof['record_id']} ({proof['explorer_url']})")
+    else:
         print("BLOCKCHAIN: Skipped (--skip-blockchain requested)")
-        (args.output / "last_run.json").write_text(
-            json.dumps({
-                "status": "skipped",
-                "artifact_hash": result.artifact_hash,
-                "metadata_hash": result.metadata_hash,
-                "source_url": result.candidate.url,
-            }, indent=2),
-            encoding="utf-8",
-        )
-        return 0
-
-    settings = Settings.from_environment()
-    rpc, key, address = settings.require_blockchain()
-    from .blockchain import MatchRegistryClient
-    from .deploy_contract import load_abi
-    record_id, tx_hash = MatchRegistryClient(rpc, key, address, load_abi()).record(result.artifact_hash, result.metadata_hash, result.candidate.url)
-    (args.output / "last_run.json").write_text(json.dumps({"record_id": record_id, "transaction": tx_hash, "source_url": result.candidate.url}, indent=2), encoding="utf-8")
-    print(f"BLOCKCHAIN: Sepolia record {record_id} ({settings.explorer_base_url}/tx/{tx_hash})")
     return 0
 
 
