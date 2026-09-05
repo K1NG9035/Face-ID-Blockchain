@@ -88,7 +88,12 @@ def run_pipeline_service(
         elif mock_dir is not None:
             provider = LocalDirectorySearch(mock_dir)
         else:
-            provider = GoogleVisionSearch()
+            settings = Settings.from_environment()
+            default_mock = Path("mock_candidates")
+            if not settings.google_credentials and default_mock.is_dir():
+                provider = LocalDirectorySearch(default_mock)
+            else:
+                provider = GoogleVisionSearch()
 
         # 3. Discover, Download & Verify Candidate Face
         verified = find_match(
