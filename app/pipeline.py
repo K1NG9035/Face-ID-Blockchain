@@ -38,7 +38,8 @@ def find_match(
 ) -> VerifiedCandidate:
     reference = encode_single_face(image_path, upsample_times=upsample_times, model=detector_model)
     output_dir.mkdir(parents=True, exist_ok=True)
-    for index, candidate in enumerate(search_provider.search(image_path), start=1):
+    candidates = search_provider.search(image_path)[:15]
+    for index, candidate in enumerate(candidates, start=1):
         artifact_path = output_dir / f"candidate_{index}.jpg"
         try:
             download_candidate(candidate, artifact_path)

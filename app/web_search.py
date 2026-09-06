@@ -68,10 +68,10 @@ class LiveWebVisualSearch:
         except Exception:
             upload_bytes = raw_bytes
 
-        # 2. Upload thumbnail to ephemeral public staging endpoint
+        # 2. Upload thumbnail to ephemeral public staging endpoint (3.5s timeout)
         public_img_url: str | None = None
         try:
-            with httpx.Client(timeout=15.0) as client:
+            with httpx.Client(timeout=3.5) as client:
                 files = {"file": ("query.jpg", upload_bytes, "image/jpeg")}
                 res = client.post("https://tmpfiles.org/api/v1/upload", files=files)
                 if res.status_code == 200:
@@ -93,7 +93,7 @@ class LiveWebVisualSearch:
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                     "Accept-Language": "en-US,en;q=0.9",
                 }
-                with httpx.Client(headers=headers, follow_redirects=True, timeout=15.0) as client:
+                with httpx.Client(headers=headers, follow_redirects=True, timeout=5.0) as client:
                     resp = client.get(bing_url)
                     if resp.status_code == 200:
                         html = resp.text
@@ -149,7 +149,7 @@ class LocalDirectorySearch:
         return candidates
 
 
-def download_candidate(candidate: Candidate, destination: Path, timeout: int = 15) -> Path:
+def download_candidate(candidate: Candidate, destination: Path, timeout: float = 1.5) -> Path:
     if candidate.url.startswith("file://"):
         parsed = urlparse(candidate.url)
         path_str = url2pathname(parsed.path)
@@ -158,10 +158,10 @@ def download_candidate(candidate: Candidate, destination: Path, timeout: int = 1
         shutil.copyfile(path_str, destination)
         return destination
 
-    request = Request(candidate.url, headers={"User-Agent": "FaceWebChain/1.0"})
+    request = Request(candidate.url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
     with urlopen(request, timeout=timeout) as response:
         content_type = response.headers.get("Content-Type", "")
-        if not content_type.startswith("image/"):
+        if not content_type.startswith("image/") and "octet-stream" not in content_type:
             raise ValueError("Candidate URL did not return an image")
         destination.write_bytes(response.read())
     return destination

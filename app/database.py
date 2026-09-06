@@ -154,3 +154,23 @@ def verify_offline_record(record_id: int, db_path: Path = DEFAULT_DB_PATH) -> di
         "social_platform": record["social_platform"],
         "confidence": record["confidence"],
     }
+
+
+def find_offline_candidates(db_path: Path = DEFAULT_DB_PATH) -> list[dict[str, Any]]:
+    """Fetch stored evidence records with valid image artifacts to use as offline search candidates."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM evidence_records
+            WHERE artifact_path IS NOT NULL AND artifact_path != ''
+            ORDER BY id DESC LIMIT 100
+            """
+        ).fetchall()
+        valid = []
+        for r in rows:
+            d = dict(r)
+            if d.get("artifact_path") and Path(d["artifact_path"]).is_file():
+                valid.append(d)
+        return valid
+

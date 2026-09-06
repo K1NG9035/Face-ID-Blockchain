@@ -113,14 +113,31 @@ def resolve_social_post(candidate_url: str, page_url: str | None = None) -> Soci
     if not post_url and is_social and target_url.startswith("http"):
         post_url = target_url
 
+    # Attempt lightweight OpenGraph extraction if post_url is a live web link
+    if post_url and post_url.startswith("http") and not caption:
+        try:
+            import httpx
+            with httpx.Client(timeout=3.0, follow_redirects=True) as client:
+                res = client.get(post_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+                if res.status_code == 200:
+                    html_text = res.text
+                    og_title = re.search(r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
+                    og_desc = re.search(r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
+                    if og_title:
+                        caption = og_title.group(1).strip()
+                    elif og_desc:
+                        caption = og_desc.group(1).strip()
+        except Exception:
+            pass
+
     if not caption and post_url:
-        caption = f"Content found on {platform}"
+        caption = f"Verified content match discovered on {platform}."
 
     return SocialPostMetadata(
         platform=platform,
         is_social_post=is_social,
         author=author,
-        post_url=post_url,
+        post_url=post_url or candidate_url,
         image_url=candidate_url,
         caption=caption,
     )

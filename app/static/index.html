@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VeriFace Forensics Terminal — Cobalt & Ice Blue Edition</title>
+  <title>VeriFace — Biometric Web Search & Blockchain Attestation</title>
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -16,28 +16,19 @@
       theme: {
         extend: {
           colors: {
-            cobalt: {
-              400: '#60A5FA',
-              500: '#3B82F6',
-              600: '#2563EB',
-              700: '#1D4ED8',
-              800: '#1E40AF',
-              900: '#1E3A8A',
-              950: '#0B1528',
-            },
-            ice: {
-              300: '#BAE6FD',
-              400: '#7DD3FC',
-              500: '#38BDF8',
+            brand: {
+              50: '#F0F9FF',
+              500: '#0284C7',
               600: '#0284C7',
-              neon: '#00F0FF',
+              700: '#0369A1',
+              900: '#0C4A6E',
+              accent: '#00F0FF',
             },
-            forensic: {
-              bg: '#060A13',
-              card: '#0A1120',
-              border: '#1E2D4A',
-              hover: '#13213D',
-              green: '#00FF9D',
+            dark: {
+              bg: '#090D16',
+              card: '#0F172A',
+              border: '#1E293B',
+              hover: '#1E293B',
             }
           },
           fontFamily: {
@@ -52,14 +43,14 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     body {
-      background-color: #050811;
-      background-image: radial-gradient(rgba(30, 45, 74, 0.4) 1px, transparent 1px);
-      background-size: 28px 28px;
+      background-color: #060913;
+      background-image: radial-gradient(rgba(30, 41, 59, 0.4) 1px, transparent 1px);
+      background-size: 24px 24px;
     }
     .hud-scanner {
-      background: linear-gradient(180deg, rgba(0, 240, 255, 0) 0%, rgba(0, 240, 255, 0.35) 50%, rgba(0, 240, 255, 0.8) 100%);
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
-      animation: scanSweep 2.5s ease-in-out infinite alternate;
+      background: linear-gradient(180deg, rgba(0, 240, 255, 0) 0%, rgba(0, 240, 255, 0.3) 50%, rgba(0, 240, 255, 0.7) 100%);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+      animation: scanSweep 2.2s ease-in-out infinite alternate;
     }
     @keyframes scanSweep {
       0% { top: 2%; opacity: 0.2; }
@@ -71,646 +62,377 @@
       height: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-      background: #0A1120;
+      background: #0F172A;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #1E2D4A;
+      background: #334155;
       border-radius: 2px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #38BDF8;
-    }
-    .glow-cyan {
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
-    }
-    .glow-green {
-      box-shadow: 0 0 20px rgba(0, 255, 157, 0.25);
     }
   </style>
 </head>
-<body class="text-slate-200 font-sans min-h-screen flex flex-col selection:bg-ice-neon selection:text-black">
+<body class="text-slate-100 font-sans min-h-screen flex flex-col selection:bg-brand-accent selection:text-black">
 
-  <!-- ================= TOP HEADER BAR ================= -->
-  <header class="border-b border-forensic-border bg-forensic-bg/95 backdrop-blur-md sticky top-0 z-50 px-4 py-2.5">
-    <div class="max-w-[1720px] mx-auto flex flex-wrap items-center justify-between gap-3">
-      <!-- Logo & Title -->
+  <!-- ================= HEADER ================= -->
+  <header class="border-b border-dark-border bg-dark-bg/90 backdrop-blur-md sticky top-0 z-40 px-6 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <!-- Brand Logo -->
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded border border-ice-500/60 bg-cobalt-950 flex items-center justify-center text-ice-neon shadow-[0_0_12px_rgba(0,240,255,0.4)]">
+        <div class="w-9 h-9 rounded-lg border border-brand-accent/40 bg-slate-900 flex items-center justify-center text-brand-accent shadow-[0_0_15px_rgba(0,240,255,0.3)]">
           <i data-lucide="shield-check" class="w-5 h-5"></i>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <span class="font-bold tracking-wider font-mono text-sm text-white">VERIFACE</span>
-            <span class="text-[10px] font-mono text-ice-400 bg-cobalt-900/60 px-1.5 py-0.5 rounded border border-ice-500/30">v4.2 PRO</span>
-            <span class="text-xs text-slate-500 font-mono hidden sm:inline">// IMMUTABLE BIOMETRIC FORENSICS // ETH_SEPOLIA</span>
-          </div>
+          <h1 class="font-bold text-base tracking-wide text-white flex items-center gap-2">
+            VeriFace <span class="text-xs font-mono font-normal text-brand-accent bg-slate-900 px-2 py-0.5 rounded border border-brand-accent/30">Forensics Terminal</span>
+          </h1>
+          <p class="text-xs text-slate-400 font-mono">Biometric Reverse Web Search & Blockchain Attestation Engine</p>
         </div>
       </div>
 
-      <!-- Navigation & Action Badges -->
-      <div class="hidden md:flex items-center gap-1.5 font-mono text-xs text-slate-400">
-        <button class="px-2.5 py-1 rounded bg-cobalt-900/40 border border-ice-500/20 text-ice-300 hover:bg-cobalt-900/80 transition flex items-center gap-1.5">
-          <i data-lucide="terminal" class="w-3.5 h-3.5"></i> ROOT_DISPATCH
+      <!-- Navigation & Status -->
+      <div class="flex items-center gap-3 font-mono text-xs">
+        <button onclick="toggleRecordsDrawer()" class="px-3 py-1.5 rounded-md bg-slate-900 border border-slate-700 text-slate-200 hover:border-brand-accent/50 hover:text-white transition flex items-center gap-2">
+          <i data-lucide="database" class="w-4 h-4 text-brand-accent"></i> Evidence Vault
         </button>
-        <button class="px-2.5 py-1 rounded bg-cobalt-900/40 border border-ice-500/40 text-ice-neon hover:bg-cobalt-900/80 transition flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,240,255,0.15)]">
-          <i data-lucide="activity" class="w-3.5 h-3.5"></i> + FORENSIC PIPELINE
-        </button>
-        <button onclick="toggleRecordsDrawer()" class="px-2.5 py-1 rounded bg-cobalt-900/40 border border-ice-500/20 text-slate-300 hover:bg-cobalt-900/80 transition flex items-center gap-1.5">
-          <i data-lucide="database" class="w-3.5 h-3.5"></i> EVIDENCE DATABASE
-        </button>
-        <a href="/docs" target="_blank" class="px-2.5 py-1 rounded bg-cobalt-900/40 border border-ice-500/20 text-slate-300 hover:bg-cobalt-900/80 transition flex items-center gap-1.5">
-          <i data-lucide="code" class="w-3.5 h-3.5"></i> API DOCS
+        <a href="/docs" target="_blank" class="px-3 py-1.5 rounded-md bg-slate-900 border border-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5 hidden sm:flex">
+          <i data-lucide="code" class="w-4 h-4 text-slate-400"></i> API Docs
         </a>
-      </div>
-
-      <!-- Real-time Telemetry Indicators -->
-      <div class="flex items-center gap-2 text-xs font-mono">
-        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-forensic-card border border-forensic-border text-slate-300">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <span class="text-emerald-400">14.2 MS RTT</span>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-950 border border-slate-800 text-emerald-400 text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Engine Online</span>
         </div>
-        <div class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded bg-forensic-card border border-forensic-border text-slate-400">
-          <span>BLK: <strong class="text-slate-200" id="headerBlockNum">#5,882,112</strong></span>
-        </div>
-        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-cobalt-950 border border-cobalt-700/60 text-ice-300">
-          <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
-          <span class="hidden sm:inline">0x71C...6F98</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Secondary Status Bar -->
-    <div class="max-w-[1720px] mx-auto mt-2 pt-2 border-t border-forensic-border/50 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-400">
-      <div class="flex items-center gap-4 flex-wrap">
-        <div class="flex items-center gap-1.5 text-ice-400">
-          <span class="w-1.5 h-1.5 rounded-full bg-ice-neon"></span>
-          <span>PIPELINE ENGINE: <strong class="text-white">ACTIVE</strong></span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="text-slate-500">SEPOLIA RPC:</span>
-          <span class="text-slate-300">11.155.111</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="text-slate-500">ZERO-KNOWLEDGE DATABASE:</span>
-          <span class="text-emerald-400">ONLINE</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="text-slate-500 hidden sm:inline">REGISTRY: 0x5b98...8012</span>
-        <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
-          <i data-lucide="check-circle" class="w-3 h-3"></i> CONSENT PROTOCOL VALID
-        </span>
       </div>
     </div>
   </header>
 
   <!-- ================= MAIN CONTAINER ================= -->
-  <main class="flex-1 max-w-[1720px] w-full mx-auto p-4 flex flex-col gap-4">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <!-- ================= 5-STAGE MILESTONE BAR ================= -->
-    <section class="grid grid-cols-2 md:grid-cols-5 gap-2.5 font-mono text-xs">
-      <!-- Stage 1 -->
-      <div id="stepCard1" class="p-2.5 rounded border border-forensic-border bg-forensic-card flex flex-col gap-1 transition-all duration-300">
-        <div class="flex items-center justify-between text-[10px] text-slate-400">
-          <span>STAGE 01</span>
-          <span id="stepBadge1" class="text-emerald-400 bg-emerald-950/50 px-1 rounded border border-emerald-500/30">READY</span>
-        </div>
-        <div class="font-bold text-slate-200 flex items-center justify-between">
-          <span>INGESTION</span>
-          <span class="text-[10px] text-slate-500">60 FPS</span>
-        </div>
-      </div>
+    <!-- ================= LEFT COLUMN: INPUT DATA ACQUISITION ================= -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
 
-      <!-- Stage 2 -->
-      <div id="stepCard2" class="p-2.5 rounded border border-forensic-border bg-forensic-card flex flex-col gap-1 transition-all duration-300">
-        <div class="flex items-center justify-between text-[10px] text-slate-400">
-          <span>STAGE 02</span>
-          <span id="stepBadge2" class="text-slate-500 bg-slate-900 px-1 rounded border border-slate-700">STANDBY</span>
+      <!-- Viewport / Data Acquisition Deck -->
+      <div class="border border-dark-border bg-dark-card rounded-xl p-4 flex flex-col gap-4 shadow-xl">
+        <div class="flex items-center justify-between border-b border-dark-border pb-3">
+          <div class="flex items-center gap-2 font-mono text-xs text-slate-200">
+            <i data-lucide="scan" class="w-4 h-4 text-brand-accent"></i>
+            <span class="font-semibold uppercase tracking-wider">Input Data Acquisition</span>
+          </div>
+          <span id="inputStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">STANDBY</span>
         </div>
-        <div class="font-bold text-slate-200 flex items-center justify-between">
-          <span>128-D EMBED</span>
-          <span class="text-[10px] text-slate-500" id="stepStat2">--</span>
-        </div>
-      </div>
 
-      <!-- Stage 3 -->
-      <div id="stepCard3" class="p-2.5 rounded border border-forensic-border bg-forensic-card flex flex-col gap-1 transition-all duration-300">
-        <div class="flex items-center justify-between text-[10px] text-slate-400">
-          <span>STAGE 03</span>
-          <span id="stepBadge3" class="text-slate-500 bg-slate-900 px-1 rounded border border-slate-700">STANDBY</span>
-        </div>
-        <div class="font-bold text-slate-200 flex items-center justify-between">
-          <span>WEB DISCOVERY</span>
-          <span class="text-[10px] text-slate-500" id="stepStat3">--</span>
-        </div>
-      </div>
+        <!-- Camera / Image Preview Area -->
+        <div class="w-full aspect-[4/3] rounded-lg border border-dark-border bg-black relative overflow-hidden flex items-center justify-center group">
+          <!-- Video Stream -->
+          <video id="webcamVideo" autoplay playsinline class="w-full h-full object-cover hidden"></video>
 
-      <!-- Stage 4 -->
-      <div id="stepCard4" class="p-2.5 rounded border border-forensic-border bg-forensic-card flex flex-col gap-1 transition-all duration-300">
-        <div class="flex items-center justify-between text-[10px] text-slate-400">
-          <span>STAGE 04</span>
-          <span id="stepBadge4" class="text-slate-500 bg-slate-900 px-1 rounded border border-slate-700">STANDBY</span>
-        </div>
-        <div class="font-bold text-slate-200 flex items-center justify-between">
-          <span>ATTESTATION</span>
-          <span class="text-[10px] text-slate-500" id="stepStat4">--</span>
-        </div>
-      </div>
+          <!-- Static Image Preview -->
+          <img id="staticImagePreview" src="" alt="Input Preview" class="w-full h-full object-cover hidden">
 
-      <!-- Stage 5 -->
-      <div id="stepCard5" class="p-2.5 rounded border border-forensic-border bg-forensic-card flex flex-col gap-1 transition-all duration-300 col-span-2 md:col-span-1">
-        <div class="flex items-center justify-between text-[10px] text-slate-400">
-          <span>STAGE 05</span>
-          <span id="stepBadge5" class="text-slate-500 bg-slate-900 px-1 rounded border border-slate-700">STANDBY</span>
-        </div>
-        <div class="font-bold text-slate-200 flex items-center justify-between">
-          <span>AUDIT PROOF</span>
-          <span class="text-[10px] text-slate-500" id="stepStat5">ZERO DRIFT</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= 2-COLUMN MAIN WORKSPACE ================= -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-
-      <!-- ================= LEFT COLUMN (ACQUISITION & TENSOR) ================= -->
-      <div class="lg:col-span-5 flex flex-col gap-4">
-
-        <!-- Forensic Acquisition Viewport -->
-        <div class="border border-forensic-border bg-forensic-card rounded-lg overflow-hidden flex flex-col shadow-lg">
-          <!-- Viewport Header -->
-          <div class="px-3.5 py-2.5 border-b border-forensic-border bg-forensic-bg/60 flex items-center justify-between font-mono text-xs">
-            <div class="flex items-center gap-2">
-              <i data-lucide="scan" class="w-4 h-4 text-ice-neon"></i>
-              <span class="text-slate-300 font-medium">SYNOPTIC FORENSIC ACQUISITION</span>
-              <span class="text-[10px] text-slate-500">[CAM_FTO_01]</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded text-[10px] bg-red-950/80 text-red-400 border border-red-500/40 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> LIVE FEED
-              </span>
-            </div>
+          <!-- No Feed Placeholder -->
+          <div id="noFeedPlaceholder" class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+            <i data-lucide="image-plus" class="w-10 h-10 text-slate-600 mb-1"></i>
+            <p class="text-xs font-mono">Upload an image, snap webcam photo, or load sample</p>
           </div>
 
-          <!-- Video / Feed Area with HUD overlay -->
-          <div class="relative w-full aspect-[4/3] bg-black overflow-hidden flex items-center justify-center">
-            <!-- Actual Video / Image display -->
-            <video id="webcamVideo" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
-            <img id="staticImagePreview" src="" alt="Target" class="w-full h-full object-cover hidden">
-            
-            <!-- Default Placeholder when no input is loaded -->
-            <div id="noFeedPlaceholder" class="flex flex-col items-center justify-center gap-3 p-6 text-center text-slate-500 font-mono">
-              <div class="w-16 h-16 rounded-full border border-dashed border-ice-500/40 flex items-center justify-center text-ice-400">
-                <i data-lucide="camera" class="w-8 h-8"></i>
-              </div>
-              <div class="text-xs">
-                <p class="text-slate-300 font-semibold mb-1">NO OPTICAL FEED INITIALIZED</p>
-                <p>Click "Live Camera" or "Load Sample" below</p>
-              </div>
-            </div>
+          <!-- HUD Scanner Line overlay -->
+          <div id="scanLine" class="hud-scanner absolute left-0 right-0 h-1.5 hidden pointer-events-none"></div>
 
-            <!-- Canvas for HUD brackets & facial landmarks -->
-            <canvas id="hudCanvas" class="absolute inset-0 pointer-events-none w-full h-full z-10"></canvas>
+          <!-- HUD Corner Brackets -->
+          <div class="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-brand-accent/70 pointer-events-none"></div>
+          <div class="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-brand-accent/70 pointer-events-none"></div>
+          <div class="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-brand-accent/70 pointer-events-none"></div>
+          <div class="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-brand-accent/70 pointer-events-none"></div>
 
-            <!-- Scanning Laser Effect Line -->
-            <div id="scanLine" class="hud-scanner absolute left-0 right-0 h-1 z-20 hidden"></div>
-
-            <!-- Optical HUD Corner Brackets -->
-            <div class="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-ice-neon pointer-events-none z-10"></div>
-            <div class="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-ice-neon pointer-events-none z-10"></div>
-            <div class="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-ice-neon pointer-events-none z-10"></div>
-            <div class="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-ice-neon pointer-events-none z-10"></div>
-
-            <!-- HUD Telemetry Text Overlay -->
-            <div class="absolute top-3 left-3 text-[10px] font-mono text-ice-300 bg-black/70 backdrop-blur px-2 py-1 rounded border border-ice-500/20 z-10 flex flex-col gap-0.5 pointer-events-none">
-              <span id="hudFps">FPS: 60.0</span>
-              <span>ISO: 100 // EXP: 1/120</span>
-              <span id="hudBoxCoords">BOUNDING: [0, 0, 0, 0]</span>
-            </div>
-
-            <div class="absolute bottom-3 right-3 text-[10px] font-mono text-emerald-300 bg-black/70 backdrop-blur px-2 py-1 rounded border border-emerald-500/20 z-10 pointer-events-none flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span id="hudFacialStatus">FACIAL EMBED: READY</span>
-            </div>
-          </div>
-
-          <!-- Feed Controls & Switcher -->
-          <div class="p-3 border-t border-forensic-border bg-forensic-bg/80 flex items-center justify-between gap-2 flex-wrap text-xs font-mono">
-            <div class="flex items-center gap-1.5">
-              <button onclick="startCamera()" class="px-2.5 py-1 rounded bg-cobalt-900/60 border border-ice-500/40 text-ice-300 hover:bg-cobalt-900 transition flex items-center gap-1">
-                <i data-lucide="video" class="w-3.5 h-3.5"></i> Live Camera
-              </button>
-              <button onclick="loadSampleImage()" class="px-2.5 py-1 rounded bg-cobalt-950 border border-slate-700 text-slate-300 hover:border-ice-500/50 hover:text-white transition flex items-center gap-1">
-                <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Load Sample
-              </button>
-              <label class="px-2.5 py-1 rounded bg-cobalt-950 border border-slate-700 text-slate-300 hover:border-ice-500/50 hover:text-white transition cursor-pointer flex items-center gap-1">
-                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload
-                <input type="file" id="fileUploadInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
-              </label>
-            </div>
-            <button onclick="captureSnapshot()" id="captureBtn" class="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold transition flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,255,157,0.3)] hidden">
-              <i data-lucide="camera" class="w-3.5 h-3.5"></i> SNAP
-            </button>
+          <!-- Bounding Box Coordinates Overlay -->
+          <div id="hudBoxCoords" class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-mono bg-black/80 px-2 py-0.5 rounded text-brand-accent border border-brand-accent/30 hidden">
+            BOUNDING: [0, 0, 0, 0]
           </div>
         </div>
 
-        <!-- 3 Primary Forensic Metric Badges -->
-        <div class="grid grid-cols-3 gap-2.5 font-mono text-center">
-          <div class="p-3 rounded-lg border border-forensic-border bg-forensic-card flex flex-col gap-1">
-            <span class="text-[10px] text-slate-500">MATCH CONFIDENCE</span>
-            <span id="metricConfidence" class="text-xl font-bold text-ice-neon">--%</span>
-            <span class="text-[9px] text-slate-500">EUCLIDEAN D-METRIC</span>
-          </div>
-          <div class="p-3 rounded-lg border border-forensic-border bg-forensic-card flex flex-col gap-1">
-            <span class="text-[10px] text-slate-500">LIVENESS / ANTI-SPOOF</span>
-            <span id="metricLiveness" class="text-xl font-bold text-emerald-400">--%</span>
-            <span class="text-[9px] text-slate-500" id="metricLivenessStatus">PASS</span>
-          </div>
-          <div class="p-3 rounded-lg border border-forensic-border bg-forensic-card flex flex-col gap-1">
-            <span class="text-[10px] text-slate-500">COSINE SIMILARITY</span>
-            <span id="metricCosine" class="text-xl font-bold text-ice-300">--</span>
-            <span class="text-[9px] text-slate-500">HYPERSPHERE ANGLE</span>
-          </div>
+        <!-- Input Action Triggers -->
+        <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+          <button onclick="startCamera()" class="py-2 px-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-brand-accent text-slate-200 hover:text-white transition flex items-center justify-center gap-1.5">
+            <i data-lucide="video" class="w-3.5 h-3.5 text-brand-accent"></i> Camera
+          </button>
+          <button onclick="loadSampleImage()" class="py-2 px-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-brand-accent text-slate-200 hover:text-white transition flex items-center justify-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Sample
+          </button>
+          <label class="py-2 px-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-brand-accent text-slate-200 hover:text-white transition cursor-pointer flex items-center justify-center gap-1.5">
+            <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-400"></i> Upload
+            <input type="file" id="fileUploadInput" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+          </label>
         </div>
 
-        <!-- 128-Dimensional Embedding Tensor Panel -->
-        <div class="border border-forensic-border bg-forensic-card rounded-lg overflow-hidden flex flex-col">
-          <div class="px-3.5 py-2.5 border-b border-forensic-border bg-forensic-bg/60 flex items-center justify-between font-mono text-xs">
-            <div class="flex items-center gap-2">
-              <i data-lucide="cpu" class="w-4 h-4 text-ice-400"></i>
-              <span class="text-slate-300 font-medium">128-DIMENSIONAL EMBEDDING TENSOR</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <button onclick="copyEmbeddingArray()" class="text-[10px] px-2 py-0.5 rounded bg-cobalt-900/50 hover:bg-cobalt-800 text-ice-300 transition flex items-center gap-1">
-                <i data-lucide="copy" class="w-3 h-3"></i> COPY ARRAY
-              </button>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-cobalt-950 text-slate-400 border border-slate-700">[IMMUTABLE]</span>
-            </div>
-          </div>
-          <div class="p-3 bg-black/40 font-mono text-[11px] leading-relaxed text-slate-300 max-h-32 overflow-y-auto custom-scrollbar">
-            <pre id="embeddingTensorDisplay" class="text-ice-300/90 whitespace-pre-wrap">[
-  -0.0431, 0.1764, -0.0519, 0.0163, 0.1918, 0.1203,
-  0.0817, -0.1192, 0.1802, -0.1120, 0.0418, 0.1821,
-  -0.0142, 0.0518, -0.1032, 0.0312, -0.0189, 0.0891,
-  ... 128 deep metric floating point features ...
-]</pre>
-          </div>
-        </div>
+        <button onclick="captureSnapshot()" id="captureBtn" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold font-mono transition flex items-center justify-center gap-2 shadow-lg hidden">
+          <i data-lucide="camera" class="w-4 h-4"></i> CAPTURE SNAPSHOT
+        </button>
 
-        <!-- Pipeline Controls & Dispatch Button -->
-        <div class="p-3.5 border border-forensic-border bg-forensic-card rounded-lg flex flex-col gap-3 font-mono">
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-slate-400">PIPELINE CONTROLS // EXECUTION DISPATCH</span>
-            <span class="text-emerald-400 text-[10px]">ALL SYSTEMS IDLE</span>
+        <!-- Pipeline Controls & Settings -->
+        <div class="border-t border-dark-border pt-4 flex flex-col gap-3 font-mono text-xs">
+          <!-- Threshold Slider -->
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between text-slate-300">
+              <span class="flex items-center gap-1"><i data-lucide="sliders" class="w-3.5 h-3.5 text-slate-400"></i> Match Threshold:</span>
+              <span id="thresholdValue" class="font-bold text-brand-accent">0.50</span>
+            </div>
+            <input type="range" id="thresholdSlider" min="0.10" max="1.00" step="0.05" value="0.50" oninput="document.getElementById('thresholdValue').innerText = parseFloat(this.value).toFixed(2)" class="w-full accent-sky-400 cursor-pointer">
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-500 block mb-1">MATCH THRESHOLD</label>
-              <input type="range" id="thresholdSlider" min="0.3" max="0.7" step="0.05" value="0.5" class="w-full accent-ice-neon" oninput="document.getElementById('thresholdVal').innerText = this.value">
-              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                <span>Strict (0.3)</span>
-                <span id="thresholdVal" class="text-ice-neon font-bold">0.5</span>
-                <span>Relaxed (0.7)</span>
-              </div>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-500 block mb-1">DETECTOR ENGINE</label>
-              <select id="detectorModelSelect" class="w-full bg-forensic-bg border border-forensic-border rounded px-2 py-1.5 text-xs text-slate-200">
-                <option value="hog" selected>HOG (Fast Metric CPU)</option>
-                <option value="cnn">CNN (Deep MMOD High Precision)</option>
-              </select>
-            </div>
+          <!-- Model Detector -->
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Face Detector Model:</span>
+            <select id="detectorModelSelect" class="bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200 text-xs focus:outline-none focus:border-brand-accent">
+              <option value="hog" selected>HOG (Fast CPU Metric)</option>
+              <option value="cnn">CNN (Deep MMOD High Precision)</option>
+            </select>
           </div>
 
-          <div class="flex items-center justify-between pt-1 border-t border-forensic-border/60 text-xs">
+          <!-- Options -->
+          <div class="flex items-center justify-between pt-1 border-t border-slate-800 text-[11px]">
             <label class="flex items-center gap-2 cursor-pointer text-slate-300">
-              <input type="checkbox" id="skipBlockchainCheckbox" class="rounded accent-cobalt-500" checked>
+              <input type="checkbox" id="skipBlockchainCheckbox" class="rounded accent-sky-500" checked>
               <span>Offline Sim Mode (Skip Sepolia Gas)</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-slate-300">
-              <input type="checkbox" id="requireLivenessCheckbox" class="rounded accent-cobalt-500">
+              <input type="checkbox" id="requireLivenessCheckbox" class="rounded accent-sky-500">
               <span>Enforce Strict Liveness</span>
             </label>
           </div>
-
-          <!-- Main Call to Action Button -->
-          <button onclick="runAudit()" id="runAuditBtn" class="w-full py-3 rounded-md bg-gradient-to-r from-cobalt-600 to-ice-600 hover:from-cobalt-500 hover:to-ice-500 text-white font-bold tracking-wider text-sm shadow-[0_0_20px_rgba(37,99,235,0.4)] transition flex items-center justify-center gap-2">
-            <i data-lucide="play" class="w-4 h-4 fill-current"></i> RUN FORENSIC AUDIT
-          </button>
         </div>
 
-      </div>
-
-      <!-- ================= RIGHT COLUMN (DISCOVERY & BLOCKCHAIN) ================= -->
-      <div class="lg:col-span-7 flex flex-col gap-4">
-
-        <!-- Stage 03: Multi-Engine Web Discovery Feed -->
-        <div class="border border-forensic-border bg-forensic-card rounded-lg overflow-hidden flex flex-col">
-          <div class="px-3.5 py-2.5 border-b border-forensic-border bg-forensic-bg/60 flex items-center justify-between font-mono text-xs">
-            <div class="flex items-center gap-2">
-              <i data-lucide="globe" class="w-4 h-4 text-ice-400"></i>
-              <span class="text-slate-300 font-medium">STAGE 03 // MULTI-ENGINE WEB DISCOVERY FEED</span>
-            </div>
-            <div class="text-[10px] text-slate-500">
-              <span>ENGINES: VISION + OSINT + X_CRAWLER</span>
-            </div>
-          </div>
-
-          <!-- Tabs -->
-          <div class="px-3 pt-2 border-b border-forensic-border bg-forensic-bg/30 flex gap-2 font-mono text-xs">
-            <button class="px-3 py-1 text-ice-neon border-b-2 border-ice-neon font-medium">ALL MATCHES (1)</button>
-            <button class="px-3 py-1 text-slate-400 hover:text-slate-200">TWITTER/X [MATCH]</button>
-            <button class="px-3 py-1 text-slate-500">REDDIT [NO_HIT]</button>
-            <button class="px-3 py-1 text-slate-500">INSTAGRAM [NO_HIT]</button>
-          </div>
-
-          <!-- Discovered Target Card -->
-          <div class="p-4 flex flex-col md:flex-row gap-4 items-start">
-            <!-- Candidate Image with bounding box -->
-            <div class="w-32 h-32 md:w-36 md:h-36 rounded border border-forensic-border bg-black overflow-hidden relative flex-shrink-0">
-              <img id="candidateImage" src="" alt="Candidate" class="w-full h-full object-cover hidden">
-              <div id="candidatePlaceholder" class="w-full h-full flex flex-col items-center justify-center text-slate-600 text-[10px] text-center p-2 font-mono">
-                <i data-lucide="search" class="w-6 h-6 mb-1"></i>
-                <span>AWAITING DISCOVERY</span>
-              </div>
-              <span id="candidateMatchBadge" class="absolute bottom-1 right-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 hidden">MATCH</span>
-            </div>
-
-            <!-- Post & Author Details -->
-            <div class="flex-1 flex flex-col gap-2 font-mono">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                  <span id="targetAuthor" class="text-sm font-bold text-white">@Sydney_Sweeney</span>
-                  <span id="targetPlatform" class="text-[10px] px-2 py-0.5 rounded bg-cobalt-900/60 text-ice-300 border border-ice-500/30">Twitter/X</span>
-                </div>
-                <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">DISCOVERED TARGET</span>
-              </div>
-
-              <!-- Post Caption / Text -->
-              <p id="targetCaption" class="text-xs text-slate-300 bg-forensic-bg/60 p-2.5 rounded border border-forensic-border/60 leading-relaxed font-sans italic">
-                "Keynote delivery & press appearances at Toronto International Film Festival 2024. Verifiable provenance on-chain."
-              </p>
-
-              <!-- Metadata Chips -->
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] text-slate-400 pt-1">
-                <div>
-                  <span class="text-slate-500 block">TIMESTAMP:</span>
-                  <span id="targetTimestamp" class="text-slate-200">2026-08-14T10:12:00Z</span>
-                </div>
-                <div>
-                  <span class="text-slate-500 block">POST URL:</span>
-                  <a id="targetPostUrl" href="#" target="_blank" class="text-ice-400 hover:underline truncate block max-w-[160px]">https://x.com/post/1</a>
-                </div>
-                <div>
-                  <span class="text-slate-500 block">STATUS:</span>
-                  <span class="text-emerald-400 font-semibold">AUTHENTIC SOURCE</span>
-                </div>
-              </div>
-
-              <!-- Button for Modal / Payload -->
-              <div class="pt-2">
-                <button onclick="togglePayloadModal()" class="text-[10px] px-3 py-1 rounded bg-forensic-bg hover:bg-forensic-hover border border-forensic-border text-slate-300 transition flex items-center gap-1.5">
-                  <i data-lucide="file-json" class="w-3.5 h-3.5 text-ice-400"></i> &lt;&gt; STAGE 03 CANONICAL JSON PAYLOAD (POST-CHAIN DATA)
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stage 04: On-Chain Smart Contract Attestation -->
-        <div class="border border-forensic-border bg-forensic-card rounded-lg overflow-hidden flex flex-col">
-          <div class="px-3.5 py-2.5 border-b border-forensic-border bg-forensic-bg/60 flex items-center justify-between font-mono text-xs">
-            <div class="flex items-center gap-2">
-              <i data-lucide="blocks" class="w-4 h-4 text-cobalt-400"></i>
-              <span class="text-slate-300 font-medium">STAGE 04 // ON-CHAIN SMART CONTRACT ATTESTATION</span>
-            </div>
-            <span id="contractStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-cobalt-950 text-ice-300 border border-cobalt-500/40">ETH_SEPOLIA STATUS: CONFIRMED</span>
-          </div>
-
-          <div class="p-4 flex flex-col gap-3 font-mono text-xs">
-            <!-- Dual SHA-256 Hashes -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="p-2.5 rounded bg-forensic-bg/80 border border-forensic-border flex flex-col gap-1">
-                <span class="text-[10px] text-slate-500">ARTIFACT SHA-256 (IMAGE FILE)</span>
-                <span id="artifactHashDisplay" class="text-[11px] text-ice-300 font-mono break-all">0x830fe13027c9cbc047a46ea03cfdc0ae77e787800b5a7a72ba25bd87849806f1</span>
-              </div>
-              <div class="p-2.5 rounded bg-forensic-bg/80 border border-forensic-border flex flex-col gap-1">
-                <span class="text-[10px] text-slate-500">METADATA SHA-256 (CANONICAL JSON)</span>
-                <span id="metadataHashDisplay" class="text-[11px] text-ice-300 font-mono break-all">0xd58943f3b6477220ab067176415d74828e9588db0fb98ae8f9380b04fdd433f2</span>
-              </div>
-            </div>
-
-            <!-- Transaction Hash & Etherscan Details -->
-            <div class="p-3 rounded bg-cobalt-950/40 border border-cobalt-800/40 flex flex-col gap-2">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <span class="text-[10px] text-slate-500 block">TRANSACTION HASH (TXID)</span>
-                  <span id="txHashDisplay" class="text-xs text-slate-200 font-bold break-all">0xdf2a987c14aef9741e2a537f8158c35996b27e852d431c4f2e6bb451e04a4387</span>
-                </div>
-                <a id="etherscanLink" href="https://sepolia.etherscan.io" target="_blank" class="px-3 py-1 rounded bg-cobalt-700/80 hover:bg-cobalt-600 text-white text-[11px] font-bold transition flex items-center gap-1">
-                  VIEW ON ETHERSCAN <i data-lucide="external-link" class="w-3 h-3"></i>
-                </a>
-              </div>
-              <div class="flex items-center gap-4 text-[10px] text-slate-400 pt-1 border-t border-cobalt-900/60 flex-wrap">
-                <span>RECORD ID: <strong class="text-ice-300" id="recordIdDisplay">#42</strong></span>
-                <span>CONFIRMATIONS: <strong class="text-emerald-400">12 BLOCKS</strong></span>
-                <span>GAS USED: <strong class="text-slate-300">48,210 GWEI</strong></span>
-              </div>
-            </div>
-
-            <!-- IPFS Evidence Witness URI -->
-            <div class="flex items-center justify-between p-2 rounded bg-forensic-bg/60 border border-forensic-border text-[11px]">
-              <div class="flex items-center gap-2 truncate">
-                <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-slate-400 flex-shrink-0"></i>
-                <span class="text-slate-400">IPFS EVIDENCE WITNESS URI:</span>
-                <span id="ipfsCidDisplay" class="text-ice-300 font-mono truncate">ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi</span>
-              </div>
-              <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">STORAGE PINNED</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stage 05: On-Chain Integrity Verifier -->
-        <div class="border border-forensic-border bg-forensic-card rounded-lg overflow-hidden flex flex-col">
-          <div class="px-3.5 py-2.5 border-b border-forensic-border bg-forensic-bg/60 flex items-center justify-between font-mono text-xs">
-            <div class="flex items-center gap-2">
-              <i data-lucide="fingerprint" class="w-4 h-4 text-emerald-400"></i>
-              <span class="text-slate-300 font-medium">STAGE 05 // ON-CHAIN INTEGRITY VERIFIER</span>
-            </div>
-            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30">[TAMPER-FREE LEDGER]</span>
-          </div>
-
-          <div class="p-4 flex flex-col gap-3 font-mono text-xs">
-            <!-- Side-by-side comparison boxes -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="p-2.5 rounded bg-forensic-bg/80 border border-forensic-border">
-                <span class="text-[10px] text-slate-500 block mb-1">COLUMN A: LOCAL ARTIFACT</span>
-                <div class="text-[11px] text-slate-300 break-all" id="colAHash">0x830fe13027c9cbc047a46ea03cfdc0ae...</div>
-                <span class="text-[9px] text-slate-500 block mt-1">Generated directly via forensic hasher</span>
-              </div>
-              <div class="p-2.5 rounded bg-forensic-bg/80 border border-forensic-border">
-                <span class="text-[10px] text-slate-500 block mb-1">COLUMN B: SEPOLIA STATE</span>
-                <div class="text-[11px] text-slate-300 break-all" id="colBHash">0x830fe13027c9cbc047a46ea03cfdc0ae...</div>
-                <span class="text-[9px] text-slate-500 block mt-1">Queried directly from smart contract storage</span>
-              </div>
-            </div>
-
-            <!-- Big Glowing Cryptographic Verification Banner -->
-            <div class="p-3.5 rounded-lg border border-emerald-500/40 bg-emerald-950/40 flex items-center justify-between flex-wrap gap-3 shadow-[0_0_15px_rgba(0,255,157,0.15)]">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                  <i data-lucide="shield-check" class="w-6 h-6"></i>
-                </div>
-                <div>
-                  <h4 class="font-bold text-sm text-emerald-400 tracking-wider">CRYPTOGRAPHIC INTEGRITY VERIFIED</h4>
-                  <p class="text-[11px] text-slate-300">MATCH: 100% BIT-FOR-BIT CORRESPONDENCE // ZERO DRIFT DETECTED</p>
-                </div>
-              </div>
-              <button onclick="downloadVerificationCert()" class="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs transition flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,255,157,0.3)]">
-                <i data-lucide="download" class="w-3.5 h-3.5"></i> DOWNLOAD CERT (.JSON)
-              </button>
-            </div>
-
-            <!-- Merkle Tree Proof Detail -->
-            <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-              <span>PROOF DEPTH: <strong class="text-slate-400">16 LEVELS</strong></span>
-              <span>ROOT: <strong class="text-ice-300">0xaa41...68bb</strong></span>
-              <span>SPEC: <strong class="text-slate-400">EIP-712 COMPLIANT</strong></span>
-            </div>
-          </div>
-        </div>
-
+        <!-- MAIN ACTION BUTTON -->
+        <button onclick="runAudit()" id="runAuditBtn" class="w-full py-3.5 rounded-lg bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-white font-bold tracking-wider text-sm font-mono shadow-[0_0_20px_rgba(2,132,199,0.3)] transition flex items-center justify-center gap-2">
+          <i data-lucide="play" class="w-4 h-4 fill-current"></i> RUN FORENSIC AUDIT
+        </button>
       </div>
 
     </div>
 
-    <!-- ================= BOTTOM CONSOLE: PROTOCOL LOG STREAM ================= -->
-    <section class="border border-forensic-border bg-forensic-card rounded-lg overflow-hidden flex flex-col font-mono text-xs">
-      <div class="px-3.5 py-2 border-b border-forensic-border bg-forensic-bg/80 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <i data-lucide="terminal" class="w-4 h-4 text-ice-neon"></i>
-          <span class="text-slate-300 font-medium text-xs">LIVE EVENT STREAM // PROTOCOL BUS</span>
+    <!-- ================= RIGHT COLUMN: DISCOVERED POST & RESULTS ================= -->
+    <div class="lg:col-span-7 flex flex-col gap-5">
+
+      <!-- ================= 1. DISCOVERED SOCIAL MEDIA POST CARD ================= -->
+      <div class="border border-dark-border bg-dark-card rounded-xl overflow-hidden flex flex-col shadow-xl">
+        <div class="px-4 py-3 border-b border-dark-border bg-slate-900/60 flex items-center justify-between font-mono text-xs">
+          <div class="flex items-center gap-2">
+            <i data-lucide="globe" class="w-4 h-4 text-brand-accent"></i>
+            <span class="text-slate-200 font-semibold uppercase tracking-wider">Discovered Social Media Post & Source</span>
+          </div>
+          <span id="targetPlatformBadge" class="px-2.5 py-0.5 rounded text-[10px] bg-sky-950 text-sky-300 border border-sky-500/40">Twitter / X</span>
         </div>
-        <div class="flex items-center gap-3 text-[10px] text-slate-500">
-          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> AUTO-SCROLL</span>
-          <button onclick="clearLogs()" class="hover:text-slate-300 transition">CLEAR LOGS</button>
+
+        <!-- Post Content Body -->
+        <div class="p-5 flex flex-col md:flex-row gap-5 items-start">
+          <!-- Candidate Image Preview -->
+          <div class="w-36 h-36 rounded-lg border border-dark-border bg-black overflow-hidden relative flex-shrink-0 group">
+            <img id="candidateImage" src="" alt="Candidate Post Image" class="w-full h-full object-cover hidden">
+            <div id="candidatePlaceholder" class="w-full h-full flex flex-col items-center justify-center text-slate-500 text-[11px] text-center p-3 font-mono">
+              <i data-lucide="search-x" class="w-7 h-7 mb-2 text-slate-600"></i>
+              <span>Awaiting Search Execution</span>
+            </div>
+            <span id="candidateMatchBadge" class="absolute bottom-1.5 right-1.5 text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-500/50 hidden">MATCH VERIFIED</span>
+          </div>
+
+          <!-- Post Details -->
+          <div class="flex-1 flex flex-col gap-3 font-mono">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span class="text-xs text-slate-400">AUTHOR / HANDLE:</span>
+                <p id="targetAuthor" class="text-base font-bold text-white font-sans">@Sydney_Sweeney</p>
+              </div>
+              <span id="verificationStatusBadge" class="text-[11px] px-2.5 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">VERIFIED SOURCE</span>
+            </div>
+
+            <!-- Post Caption / Text -->
+            <div>
+              <span class="text-[11px] text-slate-400 block mb-1">POST CAPTION / CONTEXT:</span>
+              <p id="targetCaption" class="text-xs text-slate-200 bg-slate-900/80 p-3 rounded-lg border border-slate-800 leading-relaxed font-sans italic">
+                "Keynote delivery & press appearances at Toronto International Film Festival 2024. Verifiable provenance on-chain."
+              </p>
+            </div>
+
+            <!-- Post Action Link -->
+            <div class="flex items-center justify-between flex-wrap gap-3 pt-1">
+              <a id="targetPostUrl" href="#" target="_blank" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition flex items-center gap-2 shadow-md">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> VIEW ORIGINAL POST
+              </a>
+              <span id="targetPostDomain" class="text-[11px] text-slate-400 truncate max-w-[200px]">x.com/post/1</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="protocolLogConsole" class="p-3 bg-black/70 font-mono text-[11px] leading-relaxed text-slate-300 max-h-36 overflow-y-auto custom-scrollbar flex flex-col gap-1">
-        <div class="text-slate-500">[16:42:01.214] <span class="text-ice-400">[SYSTEM_BOOT]</span> VeriFace Forensics Terminal v4.2 initialized on node 0xFA.</div>
-        <div class="text-slate-500">[16:42:01.350] <span class="text-emerald-400">[READY]</span> Camera feed and AI models ready. Standing by for audit dispatch.</div>
+
+      <!-- ================= 2. BIOMETRIC MATCH & LIVENESS RESULTS ================= -->
+      <div class="border border-dark-border bg-dark-card rounded-xl p-4 flex flex-col gap-4 shadow-xl">
+        <div class="flex items-center justify-between border-b border-dark-border pb-3 font-mono text-xs">
+          <div class="flex items-center gap-2 text-slate-200">
+            <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+            <span class="font-semibold uppercase tracking-wider">Biometric Match & Liveness Analysis</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">128-DIMENSIONAL DLIB METRIC</span>
+        </div>
+
+        <!-- 3 Primary Metric Badges -->
+        <div class="grid grid-cols-3 gap-3 font-mono text-center">
+          <div class="p-3.5 rounded-lg border border-slate-800 bg-slate-900/60 flex flex-col gap-1">
+            <span class="text-[10px] text-slate-400">MATCH CONFIDENCE</span>
+            <span id="metricConfidence" class="text-2xl font-bold text-brand-accent">--%</span>
+            <span class="text-[9px] text-slate-500">EUCLIDEAN DISTANCE</span>
+          </div>
+          <div class="p-3.5 rounded-lg border border-slate-800 bg-slate-900/60 flex flex-col gap-1">
+            <span class="text-[10px] text-slate-400">COSINE SIMILARITY</span>
+            <span id="metricCosine" class="text-2xl font-bold text-sky-300">--</span>
+            <span class="text-[9px] text-slate-500">HYPERSPHERE ANGLE</span>
+          </div>
+          <div class="p-3.5 rounded-lg border border-slate-800 bg-slate-900/60 flex flex-col gap-1">
+            <span class="text-[10px] text-slate-400">LIVENESS / ANTI-SPOOF</span>
+            <span id="metricLiveness" class="text-2xl font-bold text-emerald-400">--%</span>
+            <span id="metricLivenessStatus" class="text-[9px] text-emerald-400 font-bold">PASS</span>
+          </div>
+        </div>
+
+        <!-- 128-D Tensor Array Viewer -->
+        <div class="border border-slate-800 rounded-lg overflow-hidden bg-black/50">
+          <div class="px-3 py-2 bg-slate-900/80 flex items-center justify-between font-mono text-[11px]">
+            <span class="text-slate-300 font-medium">128-D Face Vector Embedding:</span>
+            <button onclick="copyEmbeddingArray()" class="text-[10px] text-sky-400 hover:underline flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i> Copy Vector
+            </button>
+          </div>
+          <div class="p-3 max-h-28 overflow-y-auto custom-scrollbar font-mono text-[11px] text-sky-300/90 leading-relaxed">
+            <pre id="embeddingTensorDisplay" class="whitespace-pre-wrap">[ Awaiting audit execution ... ]</pre>
+          </div>
+        </div>
       </div>
-    </section>
+
+      <!-- ================= 3. BLOCKCHAIN ATTESTATION CARD ================= -->
+      <div class="border border-dark-border bg-dark-card rounded-xl p-4 flex flex-col gap-4 shadow-xl">
+        <div class="flex items-center justify-between border-b border-dark-border pb-3 font-mono text-xs">
+          <div class="flex items-center gap-2 text-slate-200">
+            <i data-lucide="blocks" class="w-4 h-4 text-purple-400"></i>
+            <span class="font-semibold uppercase tracking-wider">Blockchain Integrity & On-Chain Proof</span>
+          </div>
+          <span id="contractStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40 font-mono">ETH SEPOLIA ATTESTATION</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+          <!-- Dual Cryptographic Hashes -->
+          <div class="flex flex-col gap-2 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+            <div>
+              <span class="text-[10px] text-slate-400 block">ARTIFACT SHA-256:</span>
+              <span id="artifactHashDisplay" class="text-slate-200 text-[11px] truncate block">--</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">METADATA SHA-256:</span>
+              <span id="metadataHashDisplay" class="text-slate-200 text-[11px] truncate block">--</span>
+            </div>
+          </div>
+
+          <!-- Transaction Info -->
+          <div class="flex flex-col justify-between bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+            <div>
+              <span class="text-[10px] text-slate-400 block">TRANSACTION HASH:</span>
+              <span id="txHashDisplay" class="text-brand-accent text-[11px] truncate block">--</span>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+              <span class="text-[10px] text-slate-400">RECORD ID: <strong id="recordIdDisplay" class="text-white">#--</strong></span>
+              <a id="etherscanLink" href="#" target="_blank" class="text-[11px] text-purple-400 hover:underline flex items-center gap-1">
+                Etherscan <i data-lucide="external-link" class="w-3 h-3"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Verification Trigger -->
+        <button onclick="verifyCurrentRecord()" class="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-xs transition flex items-center justify-center gap-2">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-400"></i> VERIFY ON-CHAIN INTEGRITY & RE-COMPUTE HASHES
+        </button>
+      </div>
+
+    </div>
 
   </main>
 
-  <!-- ================= FOOTER ================= -->
-  <footer class="border-t border-forensic-border bg-forensic-bg px-4 py-3 text-xs font-mono text-slate-500 flex flex-wrap items-center justify-between gap-2">
-    <div class="flex items-center gap-2">
-      <span class="text-slate-400 font-bold">[VERIFACE_TERMINAL_v4.2]</span>
-      <span>CRYPTOGRAPHIC LEDGER DEPLOYMENT // SHA256-ETH</span>
-    </div>
-    <div class="flex items-center gap-4 text-[11px]">
-      <a href="#" class="hover:text-ice-400 transition">TERMS // ETH-F9</a>
-      <a href="#" class="hover:text-ice-400 transition">SOC2 SECURITY DOCS</a>
-      <a href="#" class="hover:text-ice-400 transition">RPC TELEMETRY</a>
-      <span class="text-slate-600">© 2026 VERIFACE PROTOCOL. ZERO-TOLERANCE FORENSICS.</span>
-    </div>
-  </footer>
+  <!-- ================= EVIDENCE VAULT DRAWER MODAL ================= -->
+  <div id="recordsDrawer" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-end hidden">
+    <div class="w-full max-w-xl bg-dark-card border-l border-dark-border h-full flex flex-col p-6 font-mono">
+      <div class="flex items-center justify-between border-b border-dark-border pb-4 mb-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="database" class="w-5 h-5 text-brand-accent"></i>
+          <h2 class="text-base font-bold text-white">SQLite Evidence Vault Records</h2>
+        </div>
+        <button onclick="toggleRecordsDrawer()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
 
-  <!-- ================= JSON PAYLOAD MODAL ================= -->
-  <div id="payloadModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="border border-forensic-border bg-forensic-card rounded-lg w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-      <div class="px-4 py-3 border-b border-forensic-border bg-forensic-bg flex items-center justify-between font-mono text-xs">
-        <span class="text-slate-200 font-bold flex items-center gap-2">
-          <i data-lucide="file-json" class="w-4 h-4 text-ice-neon"></i> CANONICAL METADATA PAYLOAD (JSON)
-        </span>
-        <button onclick="togglePayloadModal()" class="text-slate-400 hover:text-white">✕</button>
-      </div>
-      <div class="p-4 bg-black/50 overflow-y-auto custom-scrollbar font-mono text-xs text-ice-300">
-        <pre id="modalJsonContent">{}</pre>
-      </div>
-      <div class="p-3 border-t border-forensic-border bg-forensic-bg/80 flex justify-end">
-        <button onclick="togglePayloadModal()" class="px-4 py-1.5 rounded bg-cobalt-700 hover:bg-cobalt-600 text-white font-mono text-xs font-bold transition">CLOSE</button>
+      <div id="recordsListContainer" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3">
+        <p class="text-xs text-slate-400">Loading evidence vault records...</p>
       </div>
     </div>
   </div>
 
-  <!-- ================= SCRIPTS ================= -->
+  <!-- ================= JAVASCRIPT APP CONTROLLER ================= -->
   <script>
-    lucide.createIcons();
-
     let currentImageData = null;
     let cameraStream = null;
     let lastDossier = null;
 
-    // Log message helper
-    function logEvent(tag, message, color = 'text-slate-300') {
-      const consoleEl = document.getElementById('protocolLogConsole');
-      const time = new Date().toISOString().substring(11, 23);
-      const row = document.createElement('div');
-      row.className = 'text-slate-400';
-      row.innerHTML = `<span class="text-slate-500">[${time}]</span> <span class="${color}">[${tag}]</span> ${message}`;
-      consoleEl.appendChild(row);
-      consoleEl.scrollTop = consoleEl.scrollHeight;
-    }
+    // Initialize Lucide Icons
+    lucide.createIcons();
 
-    function clearLogs() {
-      document.getElementById('protocolLogConsole').innerHTML = '';
-      logEvent('SYSTEM', 'Console buffer cleared.');
-    }
-
-    // Camera handling
+    // Start Webcam Feed
     async function startCamera() {
       try {
-        logEvent('CAM_INIT', 'Requesting optical video stream permissions...', 'text-ice-400');
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
-        });
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
         const videoEl = document.getElementById('webcamVideo');
         videoEl.srcObject = cameraStream;
         videoEl.classList.remove('hidden');
+
         document.getElementById('staticImagePreview').classList.add('hidden');
         document.getElementById('noFeedPlaceholder').classList.add('hidden');
         document.getElementById('captureBtn').classList.remove('hidden');
-        document.getElementById('scanLine').classList.remove('hidden');
-        logEvent('CAM_ONLINE', 'Optical sensor linked at 60 FPS.', 'text-emerald-400');
+        document.getElementById('inputStatusBadge').innerText = 'LIVE CAMERA';
+        document.getElementById('inputStatusBadge').className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/40';
       } catch (err) {
-        logEvent('CAM_ERROR', `Camera access denied or unavailable: ${err.message}`, 'text-red-400');
-        alert('Camera error: ' + err.message);
+        alert('Camera Access Error: ' + err.message);
       }
     }
 
+    // Capture Snapshot from Camera
     function captureSnapshot() {
       const videoEl = document.getElementById('webcamVideo');
+      if (!videoEl.srcObject) return;
+
       const canvas = document.createElement('canvas');
       canvas.width = videoEl.videoWidth || 640;
       canvas.height = videoEl.videoHeight || 480;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-      currentImageData = canvas.toDataURL('image/jpeg', 0.95);
 
-      // Stop camera stream
+      currentImageData = canvas.toDataURL('image/jpeg', 0.9);
+
+      // Show static snapshot preview
+      const imgEl = document.getElementById('staticImagePreview');
+      imgEl.src = currentImageData;
+      imgEl.classList.remove('hidden');
+
+      // Stop camera stream tracks
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
       }
       videoEl.classList.add('hidden');
       document.getElementById('captureBtn').classList.add('hidden');
-
-      const imgEl = document.getElementById('staticImagePreview');
-      imgEl.src = currentImageData;
-      imgEl.classList.remove('hidden');
-      logEvent('CAPTURE', 'Snapshot acquired. Frame locked in forensic memory buffer.', 'text-emerald-400');
+      document.getElementById('scanLine').classList.remove('hidden');
+      document.getElementById('inputStatusBadge').innerText = 'SNAPSHOT CAPTURED';
     }
 
-    // Load bundled sample image
+    // Load Bundled Sample Image
     async function loadSampleImage() {
       try {
-        logEvent('SAMPLE_LOAD', 'Fetching bundled reference face from /api/sample...', 'text-ice-400');
         const res = await fetch('/api/sample');
-        if (!res.ok) throw new Error('Sample not found');
+        if (!res.ok) throw new Error('Sample image unavailable');
         const data = await res.json();
         currentImageData = data.image;
 
@@ -726,14 +448,13 @@
         imgEl.src = currentImageData;
         imgEl.classList.remove('hidden');
         document.getElementById('scanLine').classList.remove('hidden');
-
-        logEvent('SAMPLE_READY', `Loaded sample: ${data.filename} (${data.size_bytes} bytes)`, 'text-emerald-400');
+        document.getElementById('inputStatusBadge').innerText = 'SAMPLE LOADED';
       } catch (err) {
-        logEvent('SAMPLE_ERROR', err.message, 'text-red-400');
+        alert('Sample Error: ' + err.message);
       }
     }
 
-    // File upload handler
+    // File Upload Handler
     function handleFileUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -752,15 +473,15 @@
         imgEl.src = currentImageData;
         imgEl.classList.remove('hidden');
         document.getElementById('scanLine').classList.remove('hidden');
-        logEvent('UPLOAD', `Loaded user file: ${file.name} (${file.size} bytes)`, 'text-emerald-400');
+        document.getElementById('inputStatusBadge').innerText = 'FILE LOADED';
       };
       reader.readAsDataURL(file);
     }
 
-    // Main Run Audit Pipeline
+    // Main Run Forensic Audit Execution
     async function runAudit() {
       if (!currentImageData) {
-        alert('Please capture a camera snapshot or click "Load Sample" first.');
+        alert('Please capture a camera snapshot, upload an image, or click "Sample" first.');
         return;
       }
 
@@ -771,17 +492,10 @@
 
       const runBtn = document.getElementById('runAuditBtn');
       runBtn.disabled = true;
-      runBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> RUNNING AUDIT...`;
+      runBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> AUDITING PIPELINE...`;
       lucide.createIcons();
 
-      // Step visual progression
-      setStepActive(1);
-      logEvent('DISPATCH', `Starting multi-stage forensic pipeline (model: ${model}, threshold: ${threshold})...`, 'text-ice-neon');
-
       try {
-        setStepActive(2);
-        logEvent('STAGE_01', 'Evaluating passive liveness & anti-spoofing Fourier texture...', 'text-slate-300');
-
         const payload = {
           image: currentImageData,
           threshold: threshold,
@@ -803,23 +517,10 @@
 
         const dossier = await res.json();
         lastDossier = dossier;
-
-        // Stage 3 & 4
-        setStepActive(3);
-        logEvent('STAGE_03', `Web discovery complete: ${dossier.social_post.platform} match verified.`, 'text-ice-400');
-
-        setStepActive(4);
-        logEvent('STAGE_04', `Artifact SHA-256: ${dossier.evidence_hashes.artifact_sha256.substring(0, 16)}...`, 'text-cobalt-400');
-
-        setStepActive(5);
-        logEvent('STAGE_05', 'On-chain integrity attestation confirmed. Zero drift detected.', 'text-emerald-400');
-
-        // Update UI panels with received data
         renderDossier(dossier);
 
       } catch (err) {
-        logEvent('AUDIT_FAILED', err.message, 'text-red-400');
-        alert('Audit Error: ' + err.message);
+        alert('Audit Execution Error: ' + err.message);
       } finally {
         runBtn.disabled = false;
         runBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i> RUN FORENSIC AUDIT`;
@@ -827,137 +528,150 @@
       }
     }
 
-    function setStepActive(stepNum) {
-      for (let i = 1; i <= 5; i++) {
-        const card = document.getElementById(`stepCard${i}`);
-        const badge = document.getElementById(`stepBadge${i}`);
-        if (i < stepNum) {
-          badge.className = 'text-emerald-400 bg-emerald-950/60 px-1 rounded border border-emerald-500/30';
-          badge.innerText = 'VERIFIED';
-          card.classList.remove('border-ice-neon', 'shadow-[0_0_12px_rgba(0,240,255,0.3)]');
-        } else if (i === stepNum) {
-          badge.className = 'text-ice-neon bg-cobalt-950 px-1 rounded border border-ice-neon animate-pulse';
-          badge.innerText = 'ACTIVE';
-          card.classList.add('border-ice-neon', 'shadow-[0_0_12px_rgba(0,240,255,0.3)]');
-        } else {
-          badge.className = 'text-slate-500 bg-slate-900 px-1 rounded border border-slate-700';
-          badge.innerText = 'STANDBY';
-          card.classList.remove('border-ice-neon', 'shadow-[0_0_12px_rgba(0,240,255,0.3)]');
-        }
-      }
-    }
-
+    // Render Dossier into UI
     function renderDossier(dossier) {
-      // 1. Metric Badges
-      const metrics = dossier.match_metrics;
-      document.getElementById('metricConfidence').innerText = `${metrics.confidence}%`;
-      
-      const liv = dossier.liveness;
-      document.getElementById('metricLiveness').innerText = `${liv.score}%`;
-      document.getElementById('metricLivenessStatus').innerText = liv.is_live ? 'PASS (NATURAL)' : 'FLAGGED';
-      document.getElementById('metricLivenessStatus').className = liv.is_live ? 'text-[9px] text-emerald-400 font-bold' : 'text-[9px] text-red-400 font-bold';
-
-      const cosVal = metrics.cosine_similarity !== undefined ? metrics.cosine_similarity : (1.0 - (metrics.distance ** 2) / 2.0);
-      document.getElementById('metricCosine').innerText = Number(cosVal).toFixed(3);
-
-      if (metrics.face_location) {
-        const loc = metrics.face_location;
-        document.getElementById('hudBoxCoords').innerText = `BOUNDING: [${loc.top}, ${loc.right}, ${loc.bottom}, ${loc.left}]`;
-      }
-
-      // 2. 128-D Tensor array
-      if (metrics.embedding_tensor && metrics.embedding_tensor.length > 0) {
-        const arr = metrics.embedding_tensor;
-        let formatted = '[\n  ' + arr.slice(0, 18).map(v => v.toFixed(4)).join(', ') + ',\n  ... ' + arr.length + ' floating point features ...\n]';
-        document.getElementById('embeddingTensorDisplay').innerText = formatted;
-        document.getElementById('stepStat2').innerText = `${metrics.confidence}% CONF`;
-      }
-
-      // 3. Social Media Card
+      // 1. Social Post Card
       const post = dossier.social_post;
-      document.getElementById('targetPlatform').innerText = post.platform;
-      document.getElementById('targetAuthor').innerText = post.author || 'Anonymous User';
+      document.getElementById('targetPlatformBadge').innerText = post.platform || 'Web Index';
+      document.getElementById('targetAuthor').innerText = post.author || 'Verified Account';
       document.getElementById('targetCaption').innerText = post.caption ? `"${post.caption}"` : '"Matching face identified in public post."';
-      document.getElementById('targetPostUrl').href = post.post_url || post.image_url;
-      document.getElementById('targetPostUrl').innerText = (post.post_url || post.image_url).substring(0, 35) + '...';
-      document.getElementById('stepStat3').innerText = '1 MATCH';
+
+      const postUrl = post.post_url || post.image_url || '#';
+      document.getElementById('targetPostUrl').href = postUrl;
+      document.getElementById('targetPostDomain').innerText = postUrl.replace('https://', '').replace('http://', '').substring(0, 32);
 
       // Candidate annotated image
+      const metrics = dossier.match_metrics;
+      const candImg = document.getElementById('candidateImage');
       if (metrics.annotated_artifact) {
-        const candImg = document.getElementById('candidateImage');
-        // Clean relative path for browser
         const filename = metrics.annotated_artifact.split('\\').pop().split('/').pop();
         candImg.src = `/artifacts/${filename}?t=${Date.now()}`;
         candImg.classList.remove('hidden');
         document.getElementById('candidatePlaceholder').classList.add('hidden');
         document.getElementById('candidateMatchBadge').classList.remove('hidden');
+      } else {
+        candImg.classList.add('hidden');
+        document.getElementById('candidatePlaceholder').classList.remove('hidden');
+        document.getElementById('candidateMatchBadge').classList.add('hidden');
       }
 
-      // 4. Smart contract attestation
+      if (dossier.status === 'VERIFIED_MATCH') {
+        document.getElementById('verificationStatusBadge').innerText = 'VERIFIED MATCH';
+        document.getElementById('verificationStatusBadge').className = 'text-[11px] px-2.5 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40';
+      } else {
+        document.getElementById('verificationStatusBadge').innerText = 'UNINDEXED IDENTITY';
+        document.getElementById('verificationStatusBadge').className = 'text-[11px] px-2.5 py-1 rounded bg-slate-900 text-slate-400 border border-slate-700';
+      }
+
+      // 2. Biometric Metrics
+      document.getElementById('metricConfidence').innerText = `${metrics.confidence}%`;
+      const cosVal = metrics.cosine_similarity !== undefined ? metrics.cosine_similarity : (1.0 - (metrics.distance ** 2) / 2.0);
+      document.getElementById('metricCosine').innerText = Number(cosVal).toFixed(3);
+
+      const liv = dossier.liveness;
+      document.getElementById('metricLiveness').innerText = `${liv.score}%`;
+      document.getElementById('metricLivenessStatus').innerText = liv.is_live ? 'PASS' : 'FLAGGED';
+      document.getElementById('metricLivenessStatus').className = liv.is_live ? 'text-[9px] text-emerald-400 font-bold' : 'text-[9px] text-red-400 font-bold';
+
+      if (metrics.face_location) {
+        const loc = metrics.face_location;
+        document.getElementById('hudBoxCoords').innerText = `BOUNDING: [${loc.top}, ${loc.right}, ${loc.bottom}, ${loc.left}]`;
+        document.getElementById('hudBoxCoords').classList.remove('hidden');
+      }
+
+      // 3. 128-D Tensor Vector Display
+      if (metrics.embedding_tensor && metrics.embedding_tensor.length > 0) {
+        const arr = metrics.embedding_tensor;
+        let formatted = '[\n  ' + arr.slice(0, 24).map(v => v.toFixed(4)).join(', ') + ',\n  ... ' + arr.length + ' floating point features ...\n]';
+        document.getElementById('embeddingTensorDisplay').innerText = formatted;
+      }
+
+      // 4. Blockchain Attestation
       const hashes = dossier.evidence_hashes;
-      document.getElementById('artifactHashDisplay').innerText = hashes.artifact_sha256;
-      document.getElementById('metadataHashDisplay').innerText = hashes.metadata_sha256;
-      document.getElementById('colAHash').innerText = hashes.artifact_sha256;
-      document.getElementById('colBHash').innerText = hashes.artifact_sha256;
-      document.getElementById('stepStat4').innerText = '32 COMP';
+      document.getElementById('artifactHashDisplay').innerText = hashes.artifact_sha256 || '--';
+      document.getElementById('metadataHashDisplay').innerText = hashes.metadata_sha256 || '--';
 
       const proof = dossier.blockchain_proof;
-      if (proof.status === 'anchored') {
-        document.getElementById('txHashDisplay').innerText = proof.transaction_hash;
-        document.getElementById('recordIdDisplay').innerText = `#${proof.record_id}`;
-        document.getElementById('etherscanLink').href = proof.explorer_url;
-        document.getElementById('contractStatusBadge').innerText = 'ETH_SEPOLIA STATUS: CONFIRMED';
-        document.getElementById('contractStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40';
-      } else {
-        document.getElementById('txHashDisplay').innerText = 'OFFLINE SIMULATED ATTESTATION';
-        document.getElementById('recordIdDisplay').innerText = '#SIM-1';
-        document.getElementById('contractStatusBadge').innerText = 'LOCAL STATE: STORED';
-      }
-
-      // JSON Modal text
-      document.getElementById('modalJsonContent').innerText = JSON.stringify(dossier, null, 2);
-    }
-
-    function copyEmbeddingArray() {
-      if (lastDossier && lastDossier.match_metrics && lastDossier.match_metrics.embedding_tensor) {
-        navigator.clipboard.writeText(JSON.stringify(lastDossier.match_metrics.embedding_tensor));
-        alert('128-D embedding tensor copied to clipboard!');
-      } else {
-        navigator.clipboard.writeText(document.getElementById('embeddingTensorDisplay').innerText);
-        alert('Tensor representation copied.');
+      if (proof.status === 'anchored' || proof.status === 'simulated') {
+        document.getElementById('txHashDisplay').innerText = proof.transaction_hash || '0xSimulatedHash...';
+        document.getElementById('recordIdDisplay').innerText = `#${proof.record_id || 1}`;
+        if (proof.explorer_url) {
+          document.getElementById('etherscanLink').href = proof.explorer_url;
+        }
+        document.getElementById('contractStatusBadge').innerText = proof.status === 'anchored' ? 'ETH SEPOLIA CONFIRMED' : 'SIMULATED ON-CHAIN ATTESTATION';
+        document.getElementById('contractStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40 font-mono';
       }
     }
 
-    function togglePayloadModal() {
-      const modal = document.getElementById('payloadModal');
-      modal.classList.toggle('hidden');
-    }
-
-    function downloadVerificationCert() {
+    // Verify On-Chain Integrity
+    async function verifyCurrentRecord() {
       if (!lastDossier) {
-        alert('Run an audit first to generate an attestation certificate.');
+        alert('Please run a forensic audit first to verify on-chain integrity.');
         return;
       }
-      const blob = new Blob([JSON.stringify(lastDossier, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `veriface_proof_${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      try {
+        const res = await fetch('/api/records?limit=1');
+        const records = await res.json();
+        if (!records || records.length === 0) {
+          alert('No evidence record found in database.');
+          return;
+        }
+        const recordId = records[0].id;
+        const vRes = await fetch(`/api/verify/${recordId}`);
+        const result = await vRes.json();
+
+        alert(`On-Chain & Database Integrity Verification:\n\nStatus: ${result.status}\nRecord ID: #${result.record_id}\nArtifact Hash: ${result.recomputed_hash.substring(0, 32)}...\nMatch Verified: ${result.verified}`);
+      } catch (err) {
+        alert('Verification Error: ' + err.message);
+      }
     }
 
-    function toggleRecordsDrawer() {
-      fetch('/api/records?limit=10')
-        .then(r => r.json())
-        .then(records => {
-          let summary = `Total Records in Evidence Vault: ${records.length}\n\n`;
-          records.forEach(rec => {
-            summary += `ID #${rec.id} | Platform: ${rec.social_platform} | Conf: ${rec.confidence}% | Status: ${rec.status}\nArtifact: ${rec.artifact_hash.substring(0, 16)}...\n\n`;
-          });
-          alert(summary || 'Vault is empty.');
-        })
-        .catch(e => alert('Failed to query database: ' + e.message));
+    // Toggle Evidence Vault Drawer
+    async function toggleRecordsDrawer() {
+      const drawer = document.getElementById('recordsDrawer');
+      drawer.classList.toggle('hidden');
+      if (!drawer.classList.contains('hidden')) {
+        await fetchRecords();
+      }
+    }
+
+    // Fetch Recent Records from Database
+    async function fetchRecords() {
+      const container = document.getElementById('recordsListContainer');
+      try {
+        const res = await fetch('/api/records?limit=20');
+        const records = await res.json();
+        if (records.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-400">No evidence records stored in database yet.</p>';
+          return;
+        }
+        let html = '';
+        records.forEach(r => {
+          html += `
+            <div class="p-3 rounded-lg border border-slate-800 bg-slate-900/80 flex flex-col gap-1.5 text-xs font-mono">
+              <div class="flex items-center justify-between text-slate-300">
+                <span class="font-bold text-white">#${r.id} // ${r.social_platform || 'Web'}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30">${r.confidence}% Match</span>
+              </div>
+              <p class="text-[11px] text-slate-400 truncate">${r.social_caption || 'Public post'}</p>
+              <div class="text-[10px] text-slate-500 flex justify-between">
+                <span>Created: ${new Date(r.created_at).toLocaleTimeString()}</span>
+                <span>Tx: ${r.blockchain_tx_hash ? r.blockchain_tx_hash.substring(0, 10) + '...' : 'Simulated'}</span>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-red-400">Error fetching records: ${err.message}</p>`;
+      }
+    }
+
+    // Copy Embedding Array to Clipboard
+    function copyEmbeddingArray() {
+      const text = document.getElementById('embeddingTensorDisplay').innerText;
+      navigator.clipboard.writeText(text);
+      alert('128-D Face Vector Embedding copied to clipboard!');
     }
   </script>
 </body>

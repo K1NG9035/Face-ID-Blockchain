@@ -116,7 +116,12 @@ def scan_face(payload: ScanJsonRequest) -> dict[str, Any]:
             require_liveness=payload.require_liveness,
         )
         return dossier.to_dict()
-    except (FileNotFoundError, LookupError, ValueError, RuntimeError) as exc:
+    except ValueError as exc:
+        msg = str(exc)
+        if "Expected exactly one face" in msg or "found 0" in msg:
+            raise HTTPException(status_code=400, detail="No face detected in the input image. Please upload a clear photo with a visible face.")
+        raise HTTPException(status_code=400, detail=msg)
+    except (FileNotFoundError, LookupError, RuntimeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
 

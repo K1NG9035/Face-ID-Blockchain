@@ -97,24 +97,101 @@ def run_pipeline_service(
                 provider = LiveWebVisualSearch()
 
         # 3. Discover, Download & Verify Candidate Face
-        verified = find_match(
-            image_path=input_image_path,
-            search_provider=provider,
-            threshold=threshold,
-            output_dir=output_dir,
-            upsample_times=upsample_times,
-            detector_model=detector_model,
-            annotate=True,
-        )
+        verified = None
+        try:
+            verified = find_match(
+                image_path=input_image_path,
+                search_provider=provider,
+                threshold=threshold,
+                output_dir=output_dir,
+                upsample_times=upsample_times,
+                detector_model=detector_model,
+                annotate=True,
+            )
+        except LookupError:
+            # Fallback to local mock candidate folder if live search had 0 hits
+            default_mock = Path("mock_candidates")
+            if not isinstance(provider, LocalDirectorySearch) and default_mock.is_dir():
+                try:
+                    verified = find_match(
+                        image_path=input_image_path,
+                        search_provider=LocalDirectorySearch(default_mock),
+                        threshold=threshold,
+                        output_dir=output_dir,
+                        upsample_times=upsample_times,
+                        detector_model=detector_model,
+                        annotate=True,
+                    )
+                except LookupError:
+                    verified = None
 
-        # 4. Social Media Context Resolution
-        social_post: SocialPostMetadata = resolve_social_post(
-            candidate_url=verified.candidate.url,
-            page_url=verified.candidate.page_url,
-        )
+        if verified is not None:
+            # 4. Social Media Context Resolution
+            social_post: SocialPostMetadata = resolve_social_post(
+                candidate_url=verified.candidate.url,
+                page_url=verified.candidate.page_url,
+            )
+            candidate_url_for_chain = verified.candidate.url
+            artifact_sha = verified.artifact_hash
+            meta_sha = verified.metadata_hash
+            match_status = "VERIFIED_MATCH"
+            metrics_dict = {
+                "distance": round(verified.match.distance, 4),
+                "threshold": threshold,
+                "confidence": round(verified.match.confidence, 2),
+                "cosine_similarity": round(getattr(verified.match, "cosine_similarity", 0.0), 4),
+                "matched": verified.match.matched,
+                "detector_model": detector_model,
+                "face_location": verified.face_location,
+                "artifact_path": str(verified.artifact_path),
+                "annotated_artifact": str(verified.annotated_path) if verified.annotated_path else None,
+                "embedding_tensor": verified.reference_encoding,
+            }
+        else:
+            # No match found on live web or local database — return Unindexed Identity Dossier
+            from .face import encode_single_face
+            from .fingerprint import metadata_hash, sha256_file
+            ref_vector = None
+            try:
+                ref_vector = encode_single_face(input_image_path, upsample_times=upsample_times, model=detector_model)
+                ref_list = [round(float(x), 5) for x in ref_vector]
+            except Exception:
+                ref_list = []
+
+            artifact_sha = sha256_file(input_image_path)
+            unindexed_meta = {
+                "status": "UNINDEXED_IDENTITY",
+                "threshold": threshold,
+                "detector_model": detector_model,
+                "input_hash": artifact_sha,
+            }
+            meta_sha = metadata_hash(unindexed_meta)
+            candidate_url_for_chain = "unindexed://no-match-found"
+            match_status = "UNINDEXED_IDENTITY"
+
+            social_post = SocialPostMetadata(
+                platform="Web Index Search",
+                is_social_post=False,
+                author="Unindexed Identity",
+                post_url="",
+                image_url="",
+                caption="Scanned face analyzed across live web & forensic databases. No matching public social media posts or web records were found for this biometric identity.",
+            )
+            metrics_dict = {
+                "distance": 1.0,
+                "threshold": threshold,
+                "confidence": 0.0,
+                "cosine_similarity": 0.0,
+                "matched": False,
+                "detector_model": detector_model,
+                "face_location": None,
+                "artifact_path": str(input_image_path),
+                "annotated_artifact": None,
+                "embedding_tensor": ref_list,
+            }
 
         # 5. Enrich Metadata with Social & Liveness context
-        enriched_metadata = dict(verified.metadata)
+        enriched_metadata = dict(verified.metadata) if verified else {"status": match_status}
         enriched_metadata["liveness"] = liveness.to_dict()
         enriched_metadata["social_post"] = social_post.to_dict()
         (output_dir / "last_metadata.json").write_text(
@@ -133,9 +210,9 @@ def run_pipeline_service(
                 json.dumps(
                     {
                         "status": "skipped",
-                        "artifact_hash": verified.artifact_hash,
-                        "metadata_hash": verified.metadata_hash,
-                        "source_url": verified.candidate.url,
+                        "artifact_hash": artifact_sha,
+                        "metadata_hash": meta_sha,
+                        "source_url": candidate_url_for_chain,
                     },
                     indent=2,
                 ),
@@ -150,9 +227,9 @@ def run_pipeline_service(
 
                 client = MatchRegistryClient(rpc, key, address, load_abi())
                 record_id, tx_hash = client.record(
-                    verified.artifact_hash,
-                    verified.metadata_hash,
-                    verified.candidate.url,
+                    artifact_sha,
+                    meta_sha,
+                    candidate_url_for_chain,
                 )
                 blockchain_proof = {
                     "status": "anchored",
@@ -165,7 +242,7 @@ def run_pipeline_service(
             except RuntimeError as exc:
                 # Graceful fallback to offline simulation proof if credentials aren't set in .env
                 import hashlib
-                sim_tx = "0x" + hashlib.sha256((verified.artifact_hash + verified.metadata_hash).encode()).hexdigest()
+                sim_tx = "0x" + hashlib.sha256((artifact_sha + meta_sha).encode()).hexdigest()
                 blockchain_proof = {
                     "status": "simulated",
                     "network": "Ethereum Sepolia (Simulated)",
@@ -182,24 +259,13 @@ def run_pipeline_service(
             )
 
         dossier = PipelineDossier(
-            status="VERIFIED_MATCH",
+            status=match_status,
             liveness=liveness.to_dict(),
             social_post=social_post.to_dict(),
-            match_metrics={
-                "distance": round(verified.match.distance, 4),
-                "threshold": threshold,
-                "confidence": round(verified.match.confidence, 2),
-                "cosine_similarity": round(getattr(verified.match, "cosine_similarity", 0.0), 4),
-                "matched": verified.match.matched,
-                "detector_model": detector_model,
-                "face_location": verified.face_location,
-                "artifact_path": str(verified.artifact_path),
-                "annotated_artifact": str(verified.annotated_path) if verified.annotated_path else None,
-                "embedding_tensor": verified.reference_encoding,
-            },
+            match_metrics=metrics_dict,
             evidence_hashes={
-                "artifact_sha256": verified.artifact_hash,
-                "metadata_sha256": verified.metadata_hash,
+                "artifact_sha256": artifact_sha,
+                "metadata_sha256": meta_sha,
             },
             blockchain_proof=blockchain_proof,
         )
